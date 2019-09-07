@@ -8,6 +8,8 @@ from django.contrib.auth.validators import UnicodeUsernameValidator
 from django.contrib.auth.models import PermissionsMixin, UserManager
 from django.utils.translation import gettext_lazy as _
 
+from Notice.models import Notice
+
 
 class AbstractUser(AbstractBaseUser, PermissionsMixin):
     username_validator = UnicodeUsernameValidator()
@@ -27,8 +29,7 @@ class AbstractUser(AbstractBaseUser, PermissionsMixin):
 
     ]
 
-    id = models.UUIDField(primary_key=True, default=uuid.uuid5(uuid.NAMESPACE_DNS, settings.UUID_SECRET),
-                          editable=False)
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
 
     username = models.CharField(
         _('username'),
@@ -102,6 +103,9 @@ class User(AbstractUser):
 
     Username and password are required. Other fields are optional.
     """
+    follow = models.ManyToManyField('self')
+    bookmark = models.ManyToManyField(Notice, db_table='bookmark', related_name='notices')
+    interested = models.ManyToManyField(Notice, db_table='interested', related_name='interested')
 
     class Meta(AbstractUser.Meta):
         swappable = 'AUTH_USER_MODEL'
