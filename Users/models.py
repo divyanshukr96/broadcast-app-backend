@@ -8,26 +8,27 @@ from django.contrib.auth.validators import UnicodeUsernameValidator
 from django.contrib.auth.models import PermissionsMixin, UserManager
 from django.utils.translation import gettext_lazy as _
 
-from Notice.models import Notice
+# from Notice.models import Notice
+
+SEX_CHOICE = [('MALE', 'MALE'), ('FEMALE', 'FEMALE'), ('OTHER', 'OTHER')]
+
+DEPARTMENT = 'DEPARTMENT'
+SOCIETY = 'SOCIETY'
+FACULTY = 'FACULTY'
+STUDENT = 'STUDENT'
+# ADMIN = 'ADMIN'
+
+USER_TYPES = [
+    (DEPARTMENT, 'Department'),
+    (SOCIETY, 'Society'),
+    (FACULTY, 'Faculty'),
+    (STUDENT, 'Student'),
+    # (ADMIN, 'Admin'),
+]
 
 
 class AbstractUser(AbstractBaseUser, PermissionsMixin):
     username_validator = UnicodeUsernameValidator()
-
-    DEPARTMENT = 'DEPARTMENT'
-    SOCIETY = 'SOCIETY'
-    FACULTY = 'FACULTY'
-    STUDENT = 'STUDENT'
-    ADMIN = 'ADMIN'
-
-    USER_TYPES = [
-        (DEPARTMENT, 'Department'),
-        (SOCIETY, 'Society'),
-        (FACULTY, 'Faculty'),
-        (STUDENT, 'Student'),
-        (ADMIN, 'Admin'),
-
-    ]
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
 
@@ -45,7 +46,7 @@ class AbstractUser(AbstractBaseUser, PermissionsMixin):
     name = models.CharField(_('full name'), max_length=150, blank=True)
     email = models.EmailField(_('email address'), blank=True)
     mobile = models.CharField(_('mobile'), max_length=15, blank=True)
-    user_type = models.CharField(_('user type'), max_length=15, choices=USER_TYPES, default=STUDENT)
+    user_type = models.CharField(_('user type'), max_length=15, choices=USER_TYPES, default='Student')
 
     is_staff = models.BooleanField(
         _('staff status'),
@@ -103,13 +104,41 @@ class User(AbstractUser):
 
     Username and password are required. Other fields are optional.
     """
-    follow = models.ManyToManyField('self')
-    bookmark = models.ManyToManyField(Notice, db_table='bookmark', related_name='notices')
-    interested = models.ManyToManyField(Notice, db_table='interested', related_name='interested')
+
+    # follow = models.ManyToManyField('self')
+    # bookmark = models.ManyToManyField(Notice, db_table='bookmark', related_name='notices')
+    # interested = models.ManyToManyField(Notice, db_table='interested', related_name='interested')
 
     class Meta(AbstractUser.Meta):
         swappable = 'AUTH_USER_MODEL'
 
 
-class Student(User):
-    pass
+class Student(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='student_user',
+                                limit_choices_to={'user_type': STUDENT}, primary_key=True)
+    department = models.ForeignKey(User, on_delete=models.CASCADE, related_name='student_department',
+                                   limit_choices_to={'user_type': DEPARTMENT})
+    registration_number = models.CharField(max_length=20, blank=False)
+    batch = models.IntegerField(blank=False, null=True)
+    program = models.CharField(max_length=80, blank=False)
+    sex = models.CharField(max_length=10, choices=SEX_CHOICE, blank=False)
+    dob = models.DateField(blank=False)
+
+
+class Faculty(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='faculty_user',
+                                limit_choices_to={'user_type': FACULTY}, primary_key=True)
+
+    department = models.ForeignKey(User, on_delete=models.CASCADE, related_name='faculty_department',
+                                   limit_choices_to={'user_type': DEPARTMENT})
+
+    designation = models.CharField(max_length=80, blank=False)
+
+    sex = models.CharField(max_length=10, choices=SEX_CHOICE, blank=False)
+
+    dob = models.DateField(blank=False)
+
+
+# class Society(User):
+#     registration_number = models.CharField(max_length=20, blank=False)
+#     faculty_advisor = models.CharField(max_length=20, blank=False)
