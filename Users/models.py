@@ -5,10 +5,11 @@ from django.utils import timezone
 from django.core.mail import send_mail
 from django.contrib.auth.base_user import AbstractBaseUser
 from django.contrib.auth.validators import UnicodeUsernameValidator
-from django.contrib.auth.models import PermissionsMixin, UserManager
+from django.contrib.auth.models import PermissionsMixin
 from django.utils.translation import gettext_lazy as _
 
 # from Notice.models import Notice
+from Users.manager import UserManager
 
 SEX_CHOICE = [('MALE', 'MALE'), ('FEMALE', 'FEMALE'), ('OTHER', 'OTHER')]
 
@@ -90,7 +91,9 @@ class AbstractUser(AbstractBaseUser, PermissionsMixin):
 
     def get_short_name(self):
         """Return the short name for the user."""
-        return self.name.split()[0].strip()
+        if self.name:
+            return self.name.split()[0].strip()
+        return self.name
 
     def email_user(self, subject, message, from_email=None, **kwargs):
         """Send an email to this user."""
@@ -137,7 +140,6 @@ class Faculty(models.Model):
     sex = models.CharField(max_length=10, choices=SEX_CHOICE, blank=False)
 
     dob = models.DateField(blank=False)
-
 
 # class Society(User):
 #     registration_number = models.CharField(max_length=20, blank=False)

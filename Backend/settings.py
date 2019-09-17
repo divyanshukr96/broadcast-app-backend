@@ -43,10 +43,6 @@ INSTALLED_APPS = [
     'django.contrib.sites',
     'rest_framework',
     'rest_framework.authtoken',
-    'rest_auth',
-    'rest_auth.registration',
-    'allauth',
-    'allauth.account',
     'Users',
     'Notice',
     'Files'
@@ -65,6 +61,14 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = 'Backend.urls'
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework.authentication.TokenAuthentication',
+    ),
+    # 'DEFAULT_PERMISSION_CLASSES': (
+    #     'rest_framework.permissions.IsAuthenticated',)
+}
 
 TEMPLATES = [
     {
