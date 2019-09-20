@@ -5,20 +5,27 @@ from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.hashers import make_password
 from rest_framework.exceptions import ValidationError
 
-from Users.models import User, Student, Faculty
+from Users.models import User, Student, Faculty, Society
 
 
-class StudentAdmin(admin.StackedInline):
+class StudentBaseAdmin(admin.StackedInline):
     model = Student
     fk_name = 'user'
     can_delete = False
 
 
-class FacultyAdmin(admin.StackedInline):
+class FacultyBaseAdmin(admin.StackedInline):
     model = Faculty
     fk_name = 'user'
     can_delete = False
     verbose_name = "Faculty Details"
+
+
+class SocietyBaseAdmin(admin.StackedInline):
+    model = Society
+    fk_name = 'user'
+    can_delete = False
+    verbose_name = "Society Details"
 
 
 class UserAdmin(admin.ModelAdmin):
@@ -34,13 +41,13 @@ class UserAdmin(admin.ModelAdmin):
     def get_inline_instances(self, request, obj=None):
         inlines = self.inlines
         if obj and obj.user_type == "STUDENT":
-            inlines = [StudentAdmin, ]
+            inlines = [StudentBaseAdmin, ]
         elif obj and obj.user_type == "FACULTY":
-            inlines = [FacultyAdmin, ]
+            inlines = [FacultyBaseAdmin, ]
         # elif obj and obj.user_type == "DEPARTMENT":
         #     inlines = [FacultyAdmin, ]
         elif obj and obj.user_type == "SOCIETY":
-            inlines = [FacultyAdmin, ]
+            inlines = [SocietyBaseAdmin, ]
         return [inline(self.model, self.admin_site) for inline in inlines]
 
     def get_readonly_fields(self, request, obj=None):
@@ -65,7 +72,7 @@ class UserAdmin(admin.ModelAdmin):
 
 class StudentDetailAdmin(UserAdmin):
     inlines = [
-        StudentAdmin,
+        StudentBaseAdmin,
     ]
 
     def get_object(self, request, object_id, from_field=None):
@@ -74,7 +81,7 @@ class StudentDetailAdmin(UserAdmin):
 
 class FacultyDetailAdmin(UserAdmin):
     inlines = [
-        FacultyAdmin,
+        FacultyBaseAdmin,
     ]
 
     def get_queryset(self, request):
@@ -85,3 +92,5 @@ class FacultyDetailAdmin(UserAdmin):
 
 admin.site.register(User, UserAdmin)
 # admin.site.register(User, UserDetailAdmin)
+admin.site.register(Student)
+admin.site.register(Faculty)

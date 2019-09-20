@@ -141,6 +141,9 @@ class Faculty(models.Model):
 
     dob = models.DateField(blank=False)
 
-# class Society(User):
-#     registration_number = models.CharField(max_length=20, blank=False)
-#     faculty_advisor = models.CharField(max_length=20, blank=False)
+
+class Society(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='society_user',
+                                limit_choices_to={'user_type': FACULTY}, primary_key=True)
+    registration_number = models.CharField(max_length=20, null=True)
+    faculty_advisor = models.CharField(max_length=20, null=True)

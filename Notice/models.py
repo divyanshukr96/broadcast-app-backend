@@ -16,9 +16,9 @@ class Notice(models.Model):
                                         limit_choices_to={'user_type': DEPARTMENT}, related_name='notice_department')
     title = models.CharField(max_length=191, blank=False)
     description = models.TextField(blank=True)
-    date = models.DateField(blank=True)
-    time = models.TimeField(blank=True)
-    venue = models.CharField(max_length=100, blank=True)
+    date = models.DateField(blank=True, null=True)
+    time = models.TimeField(blank=True, null=True)
+    venue = models.CharField(max_length=100, null=True)
 
     # viewed = models.ManyToManyField(settings.AUTH_USER_MODEL, db_table='viewed', related_name='viewed', blank=True)
 
