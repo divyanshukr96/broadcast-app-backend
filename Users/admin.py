@@ -6,6 +6,7 @@ from django.contrib.auth.hashers import make_password
 from rest_framework.exceptions import ValidationError
 
 from Users.models import User, Student, Faculty, Society
+from Users.reverse_admin import ReverseModelAdmin, ReverseInlineModelAdmin
 
 
 class StudentBaseAdmin(admin.StackedInline):
@@ -79,18 +80,67 @@ class StudentDetailAdmin(UserAdmin):
         queryset = self.get_queryset(request)
 
 
-class FacultyDetailAdmin(UserAdmin):
-    inlines = [
-        FacultyBaseAdmin,
-    ]
+class FacultyDetailAdmin(admin.ModelAdmin):
+    list_display = ('name', 'department_name', 'designation', 'gender')
+    fields = ('user', 'department', 'designation', 'sex', 'dob')
+
+    #
+    # fieldsets = (
+    #     (None, {
+    #         'fields': ('user', 'department',),
+    #     }),
+    # )
+
+    @staticmethod
+    def name(obj):
+        if obj.user:
+            return obj.user.name
+
+    @staticmethod
+    def department_name(obj):
+        if obj.department:
+            return obj.department.name
+
+    @staticmethod
+    def gender(obj):
+        return obj.sex[0] + obj.sex[1:].lower()
 
     def get_queryset(self, request):
         query = super(FacultyDetailAdmin, self).get_queryset(request)
-        filtered_query = query.filter(user_type='FACULTY')
+        filtered_query = query.filter(user__user_type='FACULTY')
         return filtered_query
+
+    # def has_add_permission(self, request, obj=None):
+    #     return False
+    #
+    # def has_delete_permission(self, request, obj=None):
+    #     return False
+    #
+    # def has_change_permission(self, request, obj=None):
+    #     return False
+
+
+class TestAdmin(ReverseModelAdmin):
+    inline_type = "tabular",
+
+    list_display = ('user', 'department', 'designation', 'sex', 'dob')
+    inline_reverse = [
+        ('user', {'fields': ('name', 'email', 'mobile', 'username', 'user_type',)}),
+        ('department', {'fields': ['name', 'username']})
+    ]
+
+
+class Department(User):
+    class Meta:
+        proxy = True
+
+
+class DepartmentAdmin(UserAdmin):
+    def get_queryset(self, request):
+        return self.model.objects.filter(user_type="DEPARTMENT")
 
 
 admin.site.register(User, UserAdmin)
 # admin.site.register(User, UserDetailAdmin)
 admin.site.register(Student)
-admin.site.register(Faculty)
+admin.site.register(Department, DepartmentAdmin)

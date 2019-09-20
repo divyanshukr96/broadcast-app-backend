@@ -137,9 +137,12 @@ class Faculty(models.Model):
 
     designation = models.CharField(max_length=80, blank=False)
 
-    sex = models.CharField(max_length=10, choices=SEX_CHOICE, blank=False)
+    sex = models.CharField(_('Gender'), max_length=10, choices=SEX_CHOICE, blank=False)
 
-    dob = models.DateField(blank=False)
+    dob = models.DateField(_('Date of Birth'), blank=False)
+
+    def __str__(self):
+        return self.user.name
 
 
 class Society(models.Model):

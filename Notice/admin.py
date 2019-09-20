@@ -48,6 +48,7 @@ class PostByFilter(SimpleListFilter):
 
 
 class NoticeAdmin(admin.ModelAdmin):
+
     list_display = ('title', 'date', 'time', 'venue', 'user')
     list_filter = (DepartmentFilter, 'date', 'public_notice', AdminFilter)
     search_fields = ('title', 'description', 'date', 'venue')
