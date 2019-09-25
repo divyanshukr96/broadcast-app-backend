@@ -15,5 +15,6 @@ env/
 venv/
 ENV/
 assets/
+/media/*
 
 

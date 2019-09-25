@@ -1,10 +1,11 @@
 from django.contrib import admin
 
 # Register your models here.
-from django.contrib.auth.forms import UserCreationForm
+# from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.hashers import make_password
 from rest_framework.exceptions import ValidationError
 
+from Users.form import UserCreationForm
 from Users.models import User, Student, Faculty, Society
 from Users.reverse_admin import ReverseModelAdmin, ReverseInlineModelAdmin
 
@@ -34,8 +35,10 @@ class UserAdmin(admin.ModelAdmin):
     list_display = ('username', 'name', 'email', 'mobile', 'is_active', 'user_type', 'created_at', 'last_login')
     list_filter = ('user_type', 'is_admin', 'is_staff')
     ordering = ('-created_at',)
-    fields = ('name', 'email', 'mobile', 'username', 'password', 'user_type', 'is_admin', 'is_staff', 'is_superuser')
+    fields = ('name', 'email', 'mobile', 'username', 'password', 'user_type', 'is_admin', 'is_staff', 'is_superuser', 'profile')
     readonly_fields = ('is_superuser',)
+
+    form = UserCreationForm
 
     inlines = []
 
@@ -55,7 +58,7 @@ class UserAdmin(admin.ModelAdmin):
         if obj:
             if not request.user.is_superuser:
                 return self.readonly_fields + ('username', 'is_staff',)  # have to check that staff user can add or not
-            return self.readonly_fields + ('username',)
+            return self.readonly_fields + ('username', 'user_type')
         return self.readonly_fields
 
     def save_model(self, request, obj, form, change):
@@ -78,6 +81,7 @@ class StudentDetailAdmin(UserAdmin):
 
     def get_object(self, request, object_id, from_field=None):
         queryset = self.get_queryset(request)
+        return queryset
 
 
 class FacultyDetailAdmin(admin.ModelAdmin):

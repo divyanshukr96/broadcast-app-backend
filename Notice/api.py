@@ -1,12 +1,16 @@
 from rest_framework import viewsets, permissions, generics
+from rest_framework.parsers import JSONParser, FormParser, MultiPartParser
+
 from Notice import permissions as notice_permission
-from Notice.models import Notice
+from Notice.models import Notice, Image
 from .serializers import NoticeSerializers, PublicNoticeSerializers
 
 
 class NoticeViewSet(viewsets.ModelViewSet):
     serializer_class = NoticeSerializers
     queryset = Notice.objects.all()
+
+    parser_classes = [JSONParser, FormParser, MultiPartParser]
 
     permission_classes = [
         permissions.IsAuthenticated,
@@ -16,7 +20,9 @@ class NoticeViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.is_valid(raise_exception=True)
         serializer.validated_data['user'] = self.request.user
+        # print(serializer.validated_data)
         notice = serializer.save()
+        # print(notice)
 
     def get_queryset(self):
         queryset = self.queryset

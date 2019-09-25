@@ -1,5 +1,6 @@
 import uuid
 
+from django.contrib.contenttypes.fields import GenericRelation
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
@@ -8,6 +9,7 @@ from django.utils import timezone
 
 from Backend import settings
 # from Users.models import Department
+from Files.models import Files
 from Users.models import DEPARTMENT
 from softdelete.models import SoftDeleteModel
 
@@ -30,3 +32,7 @@ class Notice(SoftDeleteModel):
         return self.title[:15]
 
 
+class Image(SoftDeleteModel):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    image = models.ImageField(blank=True, upload_to='images/%Y/%m/%d/')
+    notice = models.ForeignKey(Notice, on_delete=models.CASCADE)

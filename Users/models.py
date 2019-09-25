@@ -1,5 +1,6 @@
 import uuid
 
+from django.contrib.contenttypes.fields import GenericRelation
 from django.utils.timezone import now
 
 from Backend import settings
@@ -12,6 +13,7 @@ from django.contrib.auth.models import PermissionsMixin
 from django.utils.translation import gettext_lazy as _
 
 # from Notice.models import Notice
+from Files.models import Files
 from Users.manager import UserManager
 from softdelete.models import SoftDeleteModel
 
@@ -75,6 +77,8 @@ class AbstractUser(AbstractBaseUser, PermissionsMixin):
     updated_at = models.DateTimeField(auto_now=True)
     deleted_at = models.DateTimeField(blank=True, null=True)
 
+    image = GenericRelation(Files)
+
     objects = UserManager()
 
     objects_with_deleted = models.Manager()
@@ -112,6 +116,13 @@ class AbstractUser(AbstractBaseUser, PermissionsMixin):
         else:
             self.deleted_at = now()
             self.save()
+    #
+    # def save(self, *args, **kwargs):
+    #     print(self.clean_fields('profile'))
+    #     super().save(*args, **kwargs)
+    #     # if self._password is not None:
+    #     #     password_validation.password_changed(self._password, self)
+    #     #     self._password = None
 
 
 class User(AbstractUser):
@@ -128,6 +139,9 @@ class User(AbstractUser):
 
     class Meta(AbstractUser.Meta):
         swappable = 'AUTH_USER_MODEL'
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
 
 
 class Student(models.Model):
