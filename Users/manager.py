@@ -33,3 +33,6 @@ class UserManager(BaseUserManager):
             raise ValueError('Superuser must have is_superuser=True.')
 
         return self._create_user(username, email, password, **extra_fields)
+
+    def get_queryset(self):
+        return super(UserManager, self).get_queryset().filter(deleted_at__isnull=True)

@@ -45,7 +45,8 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
     'Users',
     'Notice',
-    'Files'
+    'Files',
+    'softdelete',
 ]
 
 SITE_ID = 1

@@ -1,4 +1,7 @@
 import uuid
+
+from django.utils.timezone import now
+
 from Backend import settings
 from django.db import models
 from django.utils import timezone
@@ -10,6 +13,7 @@ from django.utils.translation import gettext_lazy as _
 
 # from Notice.models import Notice
 from Users.manager import UserManager
+from softdelete.models import SoftDeleteModel
 
 SEX_CHOICE = [('MALE', 'MALE'), ('FEMALE', 'FEMALE'), ('OTHER', 'OTHER')]
 
@@ -67,10 +71,13 @@ class AbstractUser(AbstractBaseUser, PermissionsMixin):
             'Unselect this instead of deleting accounts.'
         ),
     )
-    date_joined = models.DateTimeField(_('date joined'), default=timezone.now)
-    updated = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    deleted_at = models.DateTimeField(blank=True, null=True)
 
     objects = UserManager()
+
+    objects_with_deleted = models.Manager()
 
     EMAIL_FIELD = 'email'
     USERNAME_FIELD = 'username'
@@ -98,6 +105,13 @@ class AbstractUser(AbstractBaseUser, PermissionsMixin):
     def email_user(self, subject, message, from_email=None, **kwargs):
         """Send an email to this user."""
         send_mail(subject, message, from_email, [self.email], **kwargs)
+
+    def delete(self, hard=False, **kwargs):
+        if hard:
+            super(AbstractUser, self).delete()
+        else:
+            self.deleted_at = now()
+            self.save()
 
 
 class User(AbstractUser):

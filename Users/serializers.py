@@ -100,3 +100,9 @@ class LoginSerializers(serializers.Serializer):
         if user and user.is_active:
             return user
         raise serializers.ValidationError("Incorrect credentials", 422)
+
+
+class PublicDepartmentSerializers(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ('id', 'name')

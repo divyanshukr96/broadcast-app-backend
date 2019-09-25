@@ -6,7 +6,7 @@ from Users.models import User, Faculty, Student
 from rest_framework import viewsets, permissions, generics
 
 from Users.serializers import RegisterSerializers, UserDetailSerializers, UserSerializers, LoginSerializers
-from .serializers import FacultySerializers, StudentSerializers, DepartmentSerializers
+from .serializers import FacultySerializers, StudentSerializers, DepartmentSerializers, PublicDepartmentSerializers
 
 
 class FacultyViewSet(viewsets.ModelViewSet):
@@ -77,3 +77,8 @@ class UserAPI(generics.RetrieveAPIView):
 
     def get_object(self):
         return self.request.user
+
+
+class PublicDepartmentAPI(generics.ListAPIView):
+    serializer_class = PublicDepartmentSerializers
+    queryset = User.objects.filter(user_type="DEPARTMENT", is_admin=False)

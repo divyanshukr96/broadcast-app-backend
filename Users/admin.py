@@ -31,9 +31,9 @@ class SocietyBaseAdmin(admin.StackedInline):
 
 class UserAdmin(admin.ModelAdmin):
     search_fields = ('email', 'username', 'name', 'mobile')
-    list_display = ('username', 'name', 'email', 'mobile', 'is_active', 'user_type', 'date_joined', 'last_login')
+    list_display = ('username', 'name', 'email', 'mobile', 'is_active', 'user_type', 'created_at', 'last_login')
     list_filter = ('user_type', 'is_admin', 'is_staff')
-    ordering = ('-date_joined',)
+    ordering = ('-created_at',)
     fields = ('name', 'email', 'mobile', 'username', 'password', 'user_type', 'is_admin', 'is_staff', 'is_superuser')
     readonly_fields = ('is_superuser',)
 

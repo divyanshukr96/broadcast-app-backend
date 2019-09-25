@@ -18,6 +18,8 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 
+admin.site.site_header = 'SLIET Broadcast'
+
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include('Users.urls')),

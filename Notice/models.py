@@ -1,14 +1,18 @@
 import uuid
 
 from django.db import models
+from django.utils.translation import gettext_lazy as _
 
 # Create your models here.
+from django.utils import timezone
+
 from Backend import settings
 # from Users.models import Department
 from Users.models import DEPARTMENT
+from softdelete.models import SoftDeleteModel
 
 
-class Notice(models.Model):
+class Notice(SoftDeleteModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='notice_user')
     public_notice = models.BooleanField(default=True)

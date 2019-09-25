@@ -1,6 +1,6 @@
 from django.urls import path
 from rest_framework import routers
-from .api import FacultyViewSet, StudentViewSet, DepartmentViewSet, RegisterAPI, UserAPI, LoginAPI
+from .api import FacultyViewSet, StudentViewSet, DepartmentViewSet, RegisterAPI, UserAPI, LoginAPI, PublicDepartmentAPI
 from Notice.api import NoticeViewSet, PublicNoticeAPI, PrivateNoticeAPI
 
 router = routers.DefaultRouter()
@@ -16,6 +16,7 @@ urlpatterns = [
     path('auth/user', UserAPI.as_view()),
     path('auth/login', LoginAPI.as_view()),
     path('public/notice', PublicNoticeAPI.as_view()),
+    path('public/department', PublicDepartmentAPI.as_view()),
     path('private/notice', PrivateNoticeAPI.as_view()),
 ]
 

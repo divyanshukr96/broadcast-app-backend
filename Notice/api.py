@@ -59,10 +59,21 @@ class PrivateNoticeAPI(generics.ListAPIView):
 
     def get_queryset(self):
         user = self.request.user
-        print(user.faculty_user.department.id)
+
         queryset = self.model.objects.filter(public_notice=False)
 
-        queryset = queryset.filter(department=user.faculty_user.department)
+        if user.user_type == "STUDENT":
+            queryset = queryset.filter(department=user.student_user.department)
+        elif user.user_type == "DEPARTMENT":
+            print('sds')
+        elif user.user_type == "SOCIETY":
+            queryset = queryset.filter(department=user.society_user.department)
+        elif user.user_type == "FACULTY":
+            queryset = queryset.filter(department=user.faculty_user.department)
+        else:
+            pass
+
+        # queryset = queryset.filter(department=user.faculty_user.department)
         # if user.user_type in ["STUDENT", "SOCIETY"]:
         #     queryset = queryset.filter(department=user.faculty_user.department)
 

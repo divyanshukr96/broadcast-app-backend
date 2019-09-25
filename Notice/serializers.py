@@ -11,6 +11,13 @@ class NoticeSerializers(serializers.ModelSerializer):
 
 
 class PublicNoticeSerializers(serializers.ModelSerializer):
+    user = serializers.SerializerMethodField('is_named_bar')
+    created_at = serializers.DateTimeField(format="%Y-%m-%d %I:%M%p")
+
     class Meta:
         model = Notice
-        fields = "__all__"
+        fields = ('id', 'title', 'description', 'date', 'time', 'venue', 'user', 'created_at')
+
+    @staticmethod
+    def is_named_bar(foo):
+        return foo.user.name
