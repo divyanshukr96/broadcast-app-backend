@@ -2,7 +2,7 @@ from rest_framework import viewsets, permissions, generics
 from rest_framework.parsers import JSONParser, FormParser, MultiPartParser
 
 from Notice import permissions as notice_permission
-from Notice.models import Notice, Image
+from Notice.models import Notice
 from .serializers import NoticeSerializers, PublicNoticeSerializers
 
 
@@ -18,9 +18,12 @@ class NoticeViewSet(viewsets.ModelViewSet):
     ]
 
     def perform_create(self, serializer):
+        temp_dept = self.request.POST.getlist('department[]')
         serializer.is_valid(raise_exception=True)
         serializer.validated_data['user'] = self.request.user
-        # print(serializer.validated_data)
+        if temp_dept.__len__() >= 1:
+            serializer.validated_data['department'] = temp_dept
+        # serializer.validated_data['department'] =
         notice = serializer.save()
         # print(notice)
 
@@ -41,15 +44,15 @@ class PublicNoticeAPI(generics.ListAPIView):
         permissions.AllowAny
     ]
 
-    def get_queryset(self):
-        queryset = self.model.objects.filter(public_notice=True)
-        return queryset
+    # def get_queryset(self):
+    #     queryset = self.model.objects.filter(public_notice=True)
+    #     return queryset
 
-        # user = self.request.user
-        # queryset = self.model.objects
-        # if user.is_authenticated and user.user_type != "STUDENT":
-        #     queryset = queryset.filter(public_notice=False)
-        # return queryset.order_by('-title')
+    # user = self.request.user
+    # queryset = self.model.objects
+    # if user.is_authenticated and user.user_type != "STUDENT":
+    #     queryset = queryset.filter(public_notice=False)
+    # return queryset.order_by('-title')
 
 
 class PrivateNoticeAPI(generics.ListAPIView):
@@ -66,18 +69,20 @@ class PrivateNoticeAPI(generics.ListAPIView):
     def get_queryset(self):
         user = self.request.user
 
-        queryset = self.model.objects.filter(public_notice=False)
-
         if user.user_type == "STUDENT":
+            queryset = self.model.objects.filter(public_notice=True)
             queryset = queryset.filter(department=user.student_user.department)
         elif user.user_type == "DEPARTMENT":
-            print('sds')
+            queryset = self.model.objects.all()
+            queryset = queryset.filter(user=user)
         elif user.user_type == "SOCIETY":
-            queryset = queryset.filter(department=user.society_user.department)
+            queryset = self.model.objects.all()
+            queryset = queryset.filter(user=user)
         elif user.user_type == "FACULTY":
+            queryset = self.model.objects.filter(public_notice=False)
             queryset = queryset.filter(department=user.faculty_user.department)
         else:
-            pass
+            queryset = self.model.objects.filter(public_notice=False)
 
         # queryset = queryset.filter(department=user.faculty_user.department)
         # if user.user_type in ["STUDENT", "SOCIETY"]:

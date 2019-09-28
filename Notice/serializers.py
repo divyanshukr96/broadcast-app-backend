@@ -15,7 +15,7 @@ class NoticeSerializers(serializers.ModelSerializer):
     class Meta:
         model = Notice
         read_only_fields = ('user',)
-        fields = ('title', 'description', 'date', 'time', 'venue', 'public_notice', 'department', 'images')
+        fields = ('title', 'description', 'date', 'time', 'venue', 'public_notice', 'department', 'images', 'is_event')
 
     def create(self, validated_data):
         images_data = self.context.get('view').request.FILES
@@ -38,15 +38,22 @@ class NoticeSerializers(serializers.ModelSerializer):
 class PublicNoticeSerializers(serializers.ModelSerializer):
     user = serializers.SerializerMethodField('is_named_bar')
     images = serializers.SerializerMethodField('notice_images')
-    created_at = serializers.DateTimeField(format="%Y-%m-%d %I:%M%p")
+    profile = serializers.SerializerMethodField('user_profile')
+    created_at = serializers.DateTimeField(format="%d-%m-%Y, %H:%M")
+    time = serializers.TimeField(format="%H:%M")
 
     class Meta:
         model = Notice
-        fields = ('id', 'title', 'description', 'date', 'time', 'venue', 'user', 'images', 'created_at')
+        fields = ('id', 'title', 'description', 'date', 'time', 'venue', 'user', 'profile', 'images', 'created_at')
 
     @staticmethod
     def is_named_bar(foo):
         return foo.user.name
+
+    def user_profile(self, foo):
+        request = self.context.get('request')
+        if foo.user.profile:
+            return request.build_absolute_uri(foo.user.profile.url)
 
     def notice_images(self, foo):
         request = self.context.get('request')

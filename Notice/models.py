@@ -1,4 +1,5 @@
 import uuid
+from datetime import datetime
 
 from django.contrib.contenttypes.fields import GenericRelation
 from django.db import models
@@ -25,6 +26,7 @@ class Notice(SoftDeleteModel):
     date = models.DateField(blank=True, null=True)
     time = models.TimeField(blank=True, null=True)
     venue = models.CharField(max_length=100, null=True)
+    is_event = models.BooleanField(default=False)
 
     # viewed = models.ManyToManyField(settings.AUTH_USER_MODEL, db_table='viewed', related_name='viewed', blank=True)
 

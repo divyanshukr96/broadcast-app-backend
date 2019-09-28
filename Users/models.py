@@ -53,6 +53,11 @@ class AbstractUser(AbstractBaseUser, PermissionsMixin):
     name = models.CharField(_('full name'), max_length=150, blank=True)
     email = models.EmailField(_('email address'), blank=True)
     mobile = models.CharField(_('mobile'), max_length=15, blank=True)
+
+    about = models.TextField(_('about'), blank=True)
+    profile = models.ImageField(_('profile image'), blank=True, upload_to='profile/%Y/%m/', null=True)
+    _extra_fields = models.TextField(_('extra fields'), blank=True, db_column="extra_fields")
+
     user_type = models.CharField(_('user type'), max_length=15, choices=USER_TYPES, default='Student')
 
     is_staff = models.BooleanField(
@@ -76,8 +81,6 @@ class AbstractUser(AbstractBaseUser, PermissionsMixin):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     deleted_at = models.DateTimeField(blank=True, null=True)
-
-    image = GenericRelation(Files)
 
     objects = UserManager()
 
@@ -116,6 +119,15 @@ class AbstractUser(AbstractBaseUser, PermissionsMixin):
         else:
             self.deleted_at = now()
             self.save()
+
+    @property
+    def extra_fields(self):
+        return self._extra_fields
+
+    @extra_fields.setter
+    def extra_fields(self, value):
+        self._extra_fields = value
+
     #
     # def save(self, *args, **kwargs):
     #     print(self.clean_fields('profile'))
@@ -153,7 +165,7 @@ class Student(models.Model):
     batch = models.IntegerField(blank=False, null=True)
     program = models.CharField(max_length=80, blank=False)
     sex = models.CharField(max_length=10, choices=SEX_CHOICE, blank=False)
-    dob = models.DateField(blank=False)
+    dob = models.DateField(_('Date of Birth'), blank=True)
 
 
 class Faculty(models.Model):
@@ -167,7 +179,7 @@ class Faculty(models.Model):
 
     sex = models.CharField(_('Gender'), max_length=10, choices=SEX_CHOICE, blank=False)
 
-    dob = models.DateField(_('Date of Birth'), blank=False)
+    dob = models.DateField(_('Date of Birth'), blank=True)
 
     def __str__(self):
         return self.user.name

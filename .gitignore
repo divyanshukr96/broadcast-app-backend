@@ -14,7 +14,7 @@ db.sqlite3
 env/
 venv/
 ENV/
-assets/
+static/
 /media/*
 
 

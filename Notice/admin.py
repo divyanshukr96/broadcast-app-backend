@@ -48,11 +48,10 @@ class PostByFilter(SimpleListFilter):
 
 
 class NoticeAdmin(admin.ModelAdmin):
-
     list_display = ('title', 'date', 'time', 'venue', 'user')
-    list_filter = (DepartmentFilter, 'date', 'public_notice', AdminFilter)
+    list_filter = (DepartmentFilter, 'created_at', 'public_notice', AdminFilter, PostByFilter)
     search_fields = ('title', 'description', 'date', 'venue')
-    fields = ('title', 'description', ('date', 'time'), 'venue', 'public_notice', 'department')
+    fields = ('title', 'description', 'is_event', ('date', 'time'), 'venue', 'public_notice', 'department')
 
 
 admin.site.register(Notice, NoticeAdmin)

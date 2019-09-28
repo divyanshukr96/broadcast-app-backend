@@ -42,7 +42,10 @@ class StudentSerializers(serializers.ModelSerializer):
 
 
 class RegisterSerializers(serializers.ModelSerializer):
-    department = serializers.ChoiceField(choices=User.objects.filter(user_type="DEPARTMENT"))
+    try:
+        department = serializers.ChoiceField(choices=User.objects.filter(user_type="DEPARTMENT"))
+    except:
+        pass
     registration_number = serializers.CharField()
     batch = serializers.IntegerField()
     program = serializers.CharField()
@@ -88,7 +91,29 @@ class UserDetailSerializers(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('id', 'name', 'email', 'mobile', 'username', 'user_type', 'is_admin', 'student', 'faculty')
+        fields = (
+            'id', 'name', 'email', 'mobile', 'username', 'user_type', 'is_admin', 'about', 'extra_fields', 'profile',
+            'student', 'faculty')
+
+
+class PasswordSerializers(serializers.ModelSerializer):
+    password = serializers.CharField()
+    new_password = serializers.CharField()
+
+    class Meta:
+        model = User
+        fields = ('password', 'new_password')
+
+    def validate(self, attrs):
+        password = attrs.get('password')
+        new_password = attrs.get('new_password')
+        user = self.context.get('request').user
+        if user.check_password(password):
+            if user and user.is_active:
+                return user
+        raise serializers.ValidationError({
+            'password': "Incorrect password"
+        }, 422)
 
 
 class LoginSerializers(serializers.Serializer):

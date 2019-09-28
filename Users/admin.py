@@ -1,8 +1,7 @@
 from django.contrib import admin
 
 # Register your models here.
-# from django.contrib.auth.forms import UserCreationForm
-from django.contrib.auth.hashers import make_password
+from rest_framework.authtoken.models import Token
 from rest_framework.exceptions import ValidationError
 
 from Users.form import UserCreationForm
@@ -35,7 +34,9 @@ class UserAdmin(admin.ModelAdmin):
     list_display = ('username', 'name', 'email', 'mobile', 'is_active', 'user_type', 'created_at', 'last_login')
     list_filter = ('user_type', 'is_admin', 'is_staff')
     ordering = ('-created_at',)
-    fields = ('name', 'email', 'mobile', 'username', 'password', 'user_type', 'is_admin', 'is_staff', 'is_superuser', 'profile')
+    fields = (
+        'name', 'email', 'mobile', 'username', 'password', 'user_type', 'is_admin', 'is_staff', 'is_superuser',
+        'profile')
     readonly_fields = ('is_superuser',)
 
     form = UserCreationForm
@@ -66,6 +67,9 @@ class UserAdmin(admin.ModelAdmin):
             try:
                 orig_obj = User.objects.get(pk=obj.pk)
                 if obj.password != orig_obj.password:
+                    token = Token.objects.get(user=orig_obj)
+                    if token:
+                        token.delete()
                     obj.set_password(obj.password)
             except:
                 obj.set_password(obj.password)
@@ -134,6 +138,11 @@ class TestAdmin(ReverseModelAdmin):
     ]
 
 
+class SuperUser(User):
+    class Meta:
+        proxy = True
+
+
 class Department(User):
     class Meta:
         proxy = True
@@ -145,6 +154,7 @@ class DepartmentAdmin(UserAdmin):
 
 
 admin.site.register(User, UserAdmin)
+admin.site.register(SuperUser)
 # admin.site.register(User, UserDetailAdmin)
 admin.site.register(Student)
 admin.site.register(Department, DepartmentAdmin)
