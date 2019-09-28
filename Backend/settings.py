@@ -17,7 +17,7 @@ from Backend.credential import DB_NAME, DB_USER, DB_PASSWORD, SITE_SECRET_KEY
 
 
 def ip_addresses():
-    ip_list = ['slietbroadcast.in']
+    ip_list = ['slietbroadcast.in', '157.245.103.153']
     for interface in netifaces.interfaces():
         addrs = netifaces.ifaddresses(interface)
         for x in (netifaces.AF_INET, netifaces.AF_INET6):
