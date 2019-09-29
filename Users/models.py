@@ -165,7 +165,7 @@ class Student(models.Model):
     batch = models.IntegerField(blank=False, null=True)
     program = models.CharField(max_length=80, blank=False)
     sex = models.CharField(max_length=10, choices=SEX_CHOICE, blank=False)
-    dob = models.DateField(_('Date of Birth'), blank=True)
+    dob = models.DateField(_('Date of Birth'), blank=True, null=True)
 
 
 class Faculty(models.Model):
@@ -179,7 +179,7 @@ class Faculty(models.Model):
 
     sex = models.CharField(_('Gender'), max_length=10, choices=SEX_CHOICE, blank=False)
 
-    dob = models.DateField(_('Date of Birth'), blank=True)
+    dob = models.DateField(_('Date of Birth'), blank=True, null=True)
 
     def __str__(self):
         return self.user.name
