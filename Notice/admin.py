@@ -52,6 +52,7 @@ class NoticeAdmin(admin.ModelAdmin):
     list_filter = (DepartmentFilter, 'created_at', 'public_notice', AdminFilter, PostByFilter)
     search_fields = ('title', 'description', 'date', 'venue')
     fields = ('title', 'description', 'is_event', ('date', 'time'), 'venue', 'public_notice', 'department')
+    list_per_page = 50
 
 
 admin.site.register(Notice, NoticeAdmin)

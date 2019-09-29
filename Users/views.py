@@ -10,3 +10,7 @@ def error404(request):
 
 def homeview(request):
     return render(request, "privacy_policy.html")
+
+
+def coming(request):
+    return render(request, "coming_soon.html")

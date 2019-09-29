@@ -38,6 +38,7 @@ class UserAdmin(admin.ModelAdmin):
         'name', 'email', 'mobile', 'username', 'password', 'user_type', 'is_admin', 'is_staff', 'is_superuser',
         'profile')
     readonly_fields = ('is_superuser',)
+    list_per_page = 15
 
     form = UserCreationForm
 
@@ -150,10 +151,27 @@ class Department(User):
 
 class DepartmentAdmin(UserAdmin):
     def get_queryset(self, request):
-        return self.model.objects.filter(user_type="DEPARTMENT")
+        return self.model.objects.filter(user_type="DEPARTMENT", is_admin=False)
+
+    def has_add_permission(self, request, obj=None):
+        return False
+
+
+class Administration(User):
+    class Meta:
+        proxy = True
+
+
+class AdministratorAdmin(UserAdmin):
+    def get_queryset(self, request):
+        return self.model.objects.filter(user_type="DEPARTMENT", is_admin=True)
+
+    def has_add_permission(self, request, obj=None):
+        return False
 
 
 admin.site.register(User, UserAdmin)
+admin.site.register(Administration, AdministratorAdmin)
 admin.site.register(SuperUser)
 # admin.site.register(User, UserDetailAdmin)
 admin.site.register(Student)

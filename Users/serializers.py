@@ -124,7 +124,9 @@ class LoginSerializers(serializers.Serializer):
         user = authenticate(**attrs)
         if user and user.is_active:
             return user
-        raise serializers.ValidationError("Incorrect credentials", 422)
+        raise serializers.ValidationError({
+            'error': "Incorrect credentials"
+        }, 422)
 
 
 class PublicDepartmentSerializers(serializers.ModelSerializer):

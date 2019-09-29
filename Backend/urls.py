@@ -23,6 +23,7 @@ from Users import views
 admin.site.site_header = 'SLIET Broadcast'
 
 urlpatterns = [
+    path('', views.coming),
     path('admin/', admin.site.urls),
     path('api/', include('Users.urls')),
     path('privacy-policy', views.homeview),
