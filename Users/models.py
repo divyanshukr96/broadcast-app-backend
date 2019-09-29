@@ -160,7 +160,7 @@ class Student(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='student_user',
                                 limit_choices_to={'user_type': STUDENT}, primary_key=True)
     department = models.ForeignKey(User, on_delete=models.CASCADE, related_name='student_department',
-                                   limit_choices_to={'user_type': DEPARTMENT})
+                                   limit_choices_to={'user_type': DEPARTMENT, 'is_admin': False})
     registration_number = models.CharField(max_length=20, blank=False)
     batch = models.IntegerField(blank=False, null=True)
     program = models.CharField(max_length=80, blank=False)
@@ -173,7 +173,7 @@ class Faculty(models.Model):
                                 limit_choices_to={'user_type': FACULTY}, primary_key=True)
 
     department = models.ForeignKey(User, on_delete=models.CASCADE, related_name='faculty_department',
-                                   limit_choices_to={'user_type': DEPARTMENT})
+                                   limit_choices_to={'user_type': DEPARTMENT, 'is_admin': False})
 
     designation = models.CharField(max_length=80, blank=False)
 
