@@ -1,9 +1,10 @@
-from rest_framework import viewsets, permissions, generics
+from rest_framework import viewsets, permissions, generics, status
 from rest_framework.parsers import JSONParser, FormParser, MultiPartParser
+from rest_framework.response import Response
 
 from Notice import permissions as notice_permission
-from Notice.models import Notice
-from .serializers import NoticeSerializers, PublicNoticeSerializers
+from Notice.models import Notice, Image
+from .serializers import NoticeSerializers, PublicNoticeSerializers, NoticeImageSerializers
 
 
 class NoticeViewSet(viewsets.ModelViewSet):
@@ -26,6 +27,13 @@ class NoticeViewSet(viewsets.ModelViewSet):
         # serializer.validated_data['department'] =
         notice = serializer.save()
         # print(notice)
+
+    def perform_update(self, serializer):
+        temp_dept = self.request.POST.getlist('department[]')
+        serializer.is_valid(raise_exception=True)
+        if temp_dept.__len__() >= 1:
+            serializer.validated_data['department'] = temp_dept
+        serializer.save()
 
     def get_queryset(self):
         queryset = self.queryset
@@ -96,3 +104,22 @@ class PrivateNoticeAPI(generics.ListAPIView):
         # if user.is_authenticated and user.user_type != "STUDENT":
         #     queryset = queryset.filter(public_notice=False)
         # return queryset.order_by('-title')
+
+
+class DeleteNoticeImage(generics.DestroyAPIView):
+    serializer_class = NoticeImageSerializers
+
+    permission_classes = [
+        permissions.IsAuthenticated
+    ]
+
+    def get_queryset(self):
+        queryset = Image.objects.filter(id=self.kwargs['pk'], notice=self.kwargs['pk_notice'])
+        return queryset
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        if instance.deleted_at:
+            return Response("Cannot delete default system category", status=status.HTTP_400_BAD_REQUEST)
+        self.perform_destroy(instance)
+        return Response(status=status.HTTP_204_NO_CONTENT)

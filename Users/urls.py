@@ -1,8 +1,8 @@
-from django.urls import path
+from django.urls import path, re_path
 from rest_framework import routers
 from .api import FacultyViewSet, StudentViewSet, DepartmentViewSet, RegisterAPI, PasswordUpdateAPI
 from .api import UserAPI, LoginAPI, PublicDepartmentAPI, UserUpdateAPI
-from Notice.api import NoticeViewSet, PublicNoticeAPI, PrivateNoticeAPI
+from Notice.api import NoticeViewSet, PublicNoticeAPI, PrivateNoticeAPI, DeleteNoticeImage
 
 router = routers.DefaultRouter()
 # router.register('user', UserViewSet, 'user')
@@ -21,6 +21,7 @@ urlpatterns = [
     path('public/notice', PublicNoticeAPI.as_view()),
     path('public/department', PublicDepartmentAPI.as_view()),
     path('private/notice', PrivateNoticeAPI.as_view()),
+    re_path('notice/(?P<pk_notice>[^/.]+)/image/(?P<pk>[^/.]+)', DeleteNoticeImage.as_view()),
 ]
 
 urlpatterns += router.urls

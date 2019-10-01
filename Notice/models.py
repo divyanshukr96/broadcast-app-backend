@@ -20,7 +20,8 @@ class Notice(SoftDeleteModel):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='notice_user')
     public_notice = models.BooleanField(default=True)
     department = models.ManyToManyField(settings.AUTH_USER_MODEL, blank=True,
-                                        limit_choices_to={'user_type': DEPARTMENT}, related_name='notice_department')
+                                        limit_choices_to={'user_type': DEPARTMENT, 'is_admin': False},
+                                        related_name='notice_department')
     title = models.CharField(max_length=191, blank=False)
     description = models.TextField(blank=True)
     date = models.DateField(blank=True, null=True)
@@ -38,3 +39,6 @@ class Image(SoftDeleteModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     image = models.ImageField(blank=True, upload_to='images/%Y/%m/%d/')
     notice = models.ForeignKey(Notice, on_delete=models.CASCADE)
+
+    def dd(self):
+        print('asdsada')

@@ -36,13 +36,15 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = SITE_SECRET_KEY
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
-ALLOWED_HOSTS = ip_addresses()
+ALLOWED_HOSTS = ['*']
 
 AUTH_USER_MODEL = 'Users.User'
 
 UUID_SECRET = 'sliet_broadcast'
+
+APPEND_SLASH = False
 
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 # Application definition
