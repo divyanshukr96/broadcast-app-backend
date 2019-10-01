@@ -87,6 +87,7 @@ class NoticeSerializers(serializers.ModelSerializer):
 
 
 class PublicNoticeSerializers(serializers.ModelSerializer):
+    can_edit = serializers.SerializerMethodField()
     user = serializers.SerializerMethodField('is_named_bar')
     images = serializers.SerializerMethodField('notice_images')
     images_list = serializers.SerializerMethodField('notice_images_list')
@@ -98,7 +99,13 @@ class PublicNoticeSerializers(serializers.ModelSerializer):
         model = Notice
         fields = (
             'id', 'title', 'description', 'is_event', 'date', 'time', 'venue', 'user', 'profile', 'images',
-            'images_list', 'department', 'public_notice', 'created_at')
+            'images_list', 'department', 'public_notice', 'can_edit', 'created_at')
+
+    def get_can_edit(self, notice):
+        request = self.context.get('request')
+        if notice.user.user_type in ['DEPARTMENT', 'SOCIETY'] and notice.user == request.user:
+            return (now() - notice.created_at).days <= 1
+        return False
 
     @staticmethod
     def is_named_bar(notice):
