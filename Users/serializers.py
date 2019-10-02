@@ -133,3 +133,9 @@ class PublicDepartmentSerializers(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ('id', 'name')
+
+
+class ChannelSerializers(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ('id', 'name', 'user_type', 'is_admin')

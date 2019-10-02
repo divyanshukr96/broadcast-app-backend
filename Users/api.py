@@ -5,7 +5,7 @@ from rest_framework.status import HTTP_200_OK
 from Users.models import User, Faculty, Student
 from rest_framework import viewsets, permissions, generics
 
-from Users.serializers import RegisterSerializers, UserDetailSerializers, UserSerializers
+from Users.serializers import RegisterSerializers, UserDetailSerializers, UserSerializers, ChannelSerializers
 from Users.serializers import LoginSerializers, PasswordSerializers
 from .serializers import FacultySerializers, StudentSerializers, DepartmentSerializers, PublicDepartmentSerializers
 
@@ -129,3 +129,8 @@ class PasswordUpdateAPI(generics.UpdateAPIView):
 class PublicDepartmentAPI(generics.ListAPIView):
     serializer_class = PublicDepartmentSerializers
     queryset = User.objects.filter(user_type="DEPARTMENT", is_admin=False)
+
+
+class ChannelAPI(generics.ListAPIView):
+    serializer_class = ChannelSerializers
+    queryset = User.objects.filter(user_type__in=['DEPARTMENT', 'SOCIETY']).order_by('user_type', '-is_admin')

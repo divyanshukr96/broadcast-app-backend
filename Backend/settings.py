@@ -13,11 +13,12 @@ https://docs.djangoproject.com/en/2.2/ref/settings/
 import os
 import netifaces
 
-from Backend.credential import DB_NAME, DB_USER, DB_PASSWORD, SITE_SECRET_KEY
+from Backend.credential import DB_NAME, DB_USER, DB_PASSWORD, SITE_SECRET_KEY, SITE_DEBUG
 
 
 def ip_addresses():
-    ip_list = ['slietbroadcast.in', '157.245.103.153']
+    # ip_list = ['slietbroadcast.in', '157.245.103.153', 'www.slietbroadcast.in']
+    ip_list = []
     for interface in netifaces.interfaces():
         addrs = netifaces.ifaddresses(interface)
         for x in (netifaces.AF_INET, netifaces.AF_INET6):
@@ -36,15 +37,13 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = SITE_SECRET_KEY
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = SITE_DEBUG
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = ip_addresses()
 
 AUTH_USER_MODEL = 'Users.User'
 
 UUID_SECRET = 'sliet_broadcast'
-
-APPEND_SLASH = False
 
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 # Application definition
