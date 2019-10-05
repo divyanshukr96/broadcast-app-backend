@@ -4,6 +4,7 @@ from rest_framework.response import Response
 
 from Notice import permissions as notice_permission
 from Notice.models import Notice, Image
+from Notice.paginations import NoticePagination
 from .serializers import NoticeSerializers, PublicNoticeSerializers, NoticeImageSerializers
 
 
@@ -43,6 +44,7 @@ class NoticeViewSet(viewsets.ModelViewSet):
 
 class PublicNoticeAPI(generics.ListAPIView):
     serializer_class = PublicNoticeSerializers
+    pagination_class = NoticePagination
 
     model = serializer_class.Meta.model
 
@@ -51,6 +53,9 @@ class PublicNoticeAPI(generics.ListAPIView):
     permission_classes = [
         permissions.AllowAny
     ]
+
+    def get_queryset(self):
+        return self.queryset.filter(public_notice=True).order_by('-created_at')
 
     # def get_queryset(self):
     #     queryset = self.model.objects.filter(public_notice=True)

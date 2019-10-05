@@ -17,8 +17,8 @@ from Backend.credential import DB_NAME, DB_USER, DB_PASSWORD, SITE_SECRET_KEY, S
 
 
 def ip_addresses():
-    ip_list = ['slietbroadcast.in', '157.245.103.153', 'www.slietbroadcast.in']
-    # ip_list = []
+    # ip_list = ['slietbroadcast.in', '157.245.103.153', 'www.slietbroadcast.in']
+    ip_list = ['192.168.137.1']
     for interface in netifaces.interfaces():
         addrs = netifaces.ifaddresses(interface)
         for x in (netifaces.AF_INET, netifaces.AF_INET6):
@@ -165,7 +165,7 @@ USE_I18N = True
 
 USE_L10N = True
 
-USE_TZ = True
+USE_TZ = False  # has changed to prevent from warning related timezone
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.2/howto/static-files/

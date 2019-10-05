@@ -90,16 +90,18 @@ class PublicNoticeSerializers(serializers.ModelSerializer):
     can_edit = serializers.SerializerMethodField()
     user = serializers.SerializerMethodField('is_named_bar')
     images = serializers.SerializerMethodField('notice_images')
+    datetime = serializers.SerializerMethodField('notice_created')
     images_list = serializers.SerializerMethodField('notice_images_list')
     profile = serializers.SerializerMethodField('user_profile')
     created_at = serializers.DateTimeField(format="%d-%m-%Y, %H:%M")
     time = serializers.TimeField(format="%H:%M")
+    date = serializers.TimeField(format="%d-%m-%Y")
 
     class Meta:
         model = Notice
         fields = (
             'id', 'title', 'description', 'is_event', 'date', 'time', 'venue', 'user', 'profile', 'images',
-            'images_list', 'department', 'public_notice', 'can_edit', 'created_at')
+            'images_list', 'department', 'public_notice', 'can_edit', 'created_at', 'datetime')
 
     def get_can_edit(self, notice):
         request = self.context.get('request')
@@ -110,6 +112,9 @@ class PublicNoticeSerializers(serializers.ModelSerializer):
     @staticmethod
     def is_named_bar(notice):
         return notice.user.name
+
+    def notice_created(self, notice):
+        return notice.created_at
 
     def user_profile(self, notice):
         request = self.context.get('request')
