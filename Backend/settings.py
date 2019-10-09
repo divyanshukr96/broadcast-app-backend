@@ -64,6 +64,9 @@ INSTALLED_APPS = [
     'softdelete',
 ]
 
+if DEBUG:
+    INSTALLED_APPS += ['corsheaders']
+
 SITE_ID = 1
 
 MIDDLEWARE = [
@@ -75,6 +78,9 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+
+if DEBUG:
+    MIDDLEWARE += ['corsheaders.middleware.CorsMiddleware']
 
 ROOT_URLCONF = 'Backend.urls'
 
@@ -177,3 +183,7 @@ MEDIA_URL = '/media/'
 STATICFILES_DIRS = [os.path.join(BASE_DIR, "assets")]
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+if DEBUG:
+    CORS_ORIGIN_ALLOW_ALL = True
+    CORS_ORIGIN_WHITELIST = ('http://0.0.0.0:3000',)

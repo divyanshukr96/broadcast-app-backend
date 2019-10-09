@@ -28,6 +28,7 @@ class Notice(SoftDeleteModel):
     time = models.TimeField(blank=True, null=True)
     venue = models.CharField(max_length=100, null=True)
     is_event = models.BooleanField(default=False)
+    visible = models.BooleanField(default=False)
 
     # viewed = models.ManyToManyField(settings.AUTH_USER_MODEL, db_table='viewed', related_name='viewed', blank=True)
 

@@ -17,6 +17,7 @@ router.register('notice', NoticeViewSet, 'notice')
 # router.register('register', RegisterAPI, 'regot')
 
 urlpatterns = [
+    path('appversion', views.app_version, name='program'),
     path('auth/register', RegisterAPI.as_view()),
     path('auth/user', UserAPI.as_view()),
     path('auth/user/password', PasswordUpdateAPI.as_view()),

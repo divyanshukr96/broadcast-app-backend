@@ -165,6 +165,7 @@ class PublicDepartmentSerializers(serializers.ModelSerializer):
 class ChannelSerializers(serializers.ModelSerializer):
     following = serializers.SerializerMethodField('is_following')
     auth = serializers.SerializerMethodField('user_auth')
+    is_admin = serializers.SerializerMethodField('admin_or_not')
 
     class Meta:
         model = User
@@ -173,8 +174,17 @@ class ChannelSerializers(serializers.ModelSerializer):
     def is_following(self, channel):
         user = self._context["request"].user
         if user.is_authenticated:
+            if channel == user.student_user.department:
+                return True
             return Follower.is_following(channel=channel, user=user)
         return False
+
+    def admin_or_not(self, channel):
+        user = self._context["request"].user
+        if user.is_authenticated:
+            if channel == user.student_user.department:
+                return True
+        return channel.is_admin
 
     def user_auth(self, channel):
         user = self._context["request"].user

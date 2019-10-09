@@ -135,6 +135,10 @@ class PublicDepartmentAPI(generics.ListAPIView):
 class ChannelAPI(generics.ListAPIView):
     serializer_class = ChannelSerializers
 
+    permission_classes = [
+        permissions.AllowAny
+    ]
+
     queryset = User.objects.filter(user_type__in=[
         'DEPARTMENT', 'SOCIETY', 'CHANNEL'
     ]).order_by('user_type', '-is_admin')
@@ -168,7 +172,10 @@ class ChannelFollowingAPI(generics.ListAPIView):
             queryset = queryset.all()
             user = self.request.user
             follow = [o.id for o in user.get_following()]
-            queryset = queryset.filter(Q(id__in=follow) | Q(is_admin=True))
+            if user.student_user:
+                queryset = queryset.filter(Q(id__in=follow) | Q(is_admin=True) | Q(id=user.student_user.department.id))
+            else:
+                queryset = queryset.filter(Q(id__in=follow) | Q(is_admin=True))
         return queryset
 
 

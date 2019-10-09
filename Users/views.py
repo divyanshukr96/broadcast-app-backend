@@ -22,3 +22,11 @@ def coming(request):
 @api_view(['GET'])
 def program(request):
     return Response(PROGRAM_CHOICE, status=200)
+
+
+@api_view(['GET'])
+def app_version(request):
+    return Response({
+        'android': '1.1.0',
+        'ios': '1.1.0'
+    }, 200)

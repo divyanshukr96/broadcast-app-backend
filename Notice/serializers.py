@@ -19,7 +19,7 @@ class NoticeSerializers(serializers.ModelSerializer):
         read_only_fields = ('user',)
         fields = (
             'id', 'title', 'description', 'date', 'time', 'venue', 'public_notice', 'department', 'images_list',
-            'images', 'is_event')
+            'images', 'is_event', 'visible')
 
     def notice_images(self, notice):
         request = self.context.get('request')
@@ -80,6 +80,7 @@ class NoticeSerializers(serializers.ModelSerializer):
         instance.time = validated_data.get('time', instance.time)
 
         instance.public_notice = validated_data.get('public_notice', instance.public_notice)
+        instance.visible = validated_data.get('visible', instance.visible)
 
         instance.save()
 
@@ -101,11 +102,11 @@ class PublicNoticeSerializers(serializers.ModelSerializer):
         model = Notice
         fields = (
             'id', 'title', 'description', 'is_event', 'date', 'time', 'venue', 'user', 'profile', 'images',
-            'images_list', 'department', 'public_notice', 'can_edit', 'created_at', 'datetime')
+            'images_list', 'department', 'public_notice', 'visible', 'can_edit', 'created_at', 'datetime')
 
     def get_can_edit(self, notice):
         request = self.context.get('request')
-        if notice.user.user_type in ['DEPARTMENT', 'SOCIETY'] and notice.user == request.user:
+        if notice.user.user_type in ['DEPARTMENT', 'SOCIETY', 'CHANNEL'] and notice.user == request.user:
             return (now() - notice.created_at).days <= 1
         return False
 
