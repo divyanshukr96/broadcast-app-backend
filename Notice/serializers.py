@@ -113,7 +113,8 @@ class PublicNoticeSerializers(serializers.ModelSerializer):
     def is_named_bar(notice):
         return notice.user.name
 
-    def notice_created(self, notice):
+    @staticmethod
+    def notice_created(notice):
         return notice.created_at
 
     def user_profile(self, notice):

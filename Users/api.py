@@ -1,12 +1,13 @@
+from django.db.models import QuerySet, Q
 from rest_framework.authtoken.models import Token
 from rest_framework.response import Response
 from rest_framework.status import HTTP_200_OK
 
-from Users.models import User, Faculty, Student
+from Users.models import User, Faculty, Student, Follower
 from rest_framework import viewsets, permissions, generics
 
 from Users.serializers import RegisterSerializers, UserDetailSerializers, UserSerializers, ChannelSerializers
-from Users.serializers import LoginSerializers, PasswordSerializers
+from Users.serializers import LoginSerializers, PasswordSerializers, FollowerSerializers
 from .serializers import FacultySerializers, StudentSerializers, DepartmentSerializers, PublicDepartmentSerializers
 
 
@@ -49,10 +50,10 @@ class RegisterAPI(generics.GenericAPIView):
             'registration_number': request.data['registration_number'],
             'program': request.data['program'],
             'batch': request.data['batch'],
-            'sex': request.data['sex'],
+            'gender': request.data['gender'],
             'dob': request.data['dob'],
         }
-        return Response(data_send)
+        return Response(data_send, status=201)
 
 
 class LoginAPI(generics.GenericAPIView):
@@ -133,4 +134,84 @@ class PublicDepartmentAPI(generics.ListAPIView):
 
 class ChannelAPI(generics.ListAPIView):
     serializer_class = ChannelSerializers
-    queryset = User.objects.filter(user_type__in=['DEPARTMENT', 'SOCIETY']).order_by('user_type', '-is_admin')
+
+    queryset = User.objects.filter(user_type__in=[
+        'DEPARTMENT', 'SOCIETY', 'CHANNEL'
+    ]).order_by('user_type', '-is_admin')
+
+    def get_queryset(self):
+        queryset = self.queryset
+        if isinstance(queryset, QuerySet):
+            queryset = queryset.all()
+            params = self.request.query_params
+            if params.get('admin'):
+                queryset = queryset.filter(is_admin=params.get('admin') is not None)
+            if params.get('type'):
+                queryset = queryset.filter(user_type=params.get('type').upper(), is_admin=False)
+        return queryset
+
+
+class ChannelFollowingAPI(generics.ListAPIView):
+    serializer_class = ChannelSerializers
+
+    permission_classes = [
+        permissions.IsAuthenticated
+    ]
+
+    queryset = User.objects.filter(user_type__in=[
+        'DEPARTMENT', 'SOCIETY', 'CHANNEL'
+    ], ).order_by('user_type', '-is_admin')
+
+    def get_queryset(self):
+        queryset = self.queryset
+        if isinstance(queryset, QuerySet):
+            queryset = queryset.all()
+            user = self.request.user
+            follow = [o.id for o in user.get_following()]
+            queryset = queryset.filter(Q(id__in=follow) | Q(is_admin=True))
+        return queryset
+
+
+class ChannelFollowAPI(viewsets.ModelViewSet):
+    serializer_class = FollowerSerializers
+
+    permission_classes = [
+        permissions.IsAuthenticated
+    ]
+
+    queryset = Follower.objects.all()
+
+    @staticmethod
+    def __follow_change(request, status, *args, **kwargs):
+        try:
+            res_status = 200
+            response = 'You are now following to '
+            if not status:
+                response = "You have un-follow the "
+            if kwargs['pk']:
+                to_user = User.objects.get(id=kwargs['pk'])
+                request.user.add_follower(to=to_user, status=status)
+                response += to_user.name
+            return Response({
+                response
+            }, status=res_status)
+        except:
+            return Response({
+                'following': 'Not found'
+            }, status=400)
+
+    def create(self, request, *args, **kwargs):
+        return self.__follow_change(request, status=True, *args, **kwargs)
+
+    def destroy(self, request, *args, **kwargs):
+        return self.__follow_change(request, status=False, *args, **kwargs)
+
+    #
+    # def get_queryset(self):
+    #     queryset = self.queryset
+    #     if isinstance(queryset, QuerySet):
+    #         queryset = queryset.all()
+    #         params = self.request.query_params
+    #         if params.get('type'):
+    #             queryset = queryset.filter(user_type=params.get('type').upper())
+    #     return queryset

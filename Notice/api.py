@@ -70,6 +70,7 @@ class PublicNoticeAPI(generics.ListAPIView):
 
 class PrivateNoticeAPI(generics.ListAPIView):
     serializer_class = PublicNoticeSerializers
+    pagination_class = NoticePagination
 
     model = serializer_class.Meta.model
 
@@ -102,7 +103,7 @@ class PrivateNoticeAPI(generics.ListAPIView):
         #     queryset = queryset.filter(department=user.faculty_user.department)
 
         # print(queryset.get().user)
-        return queryset
+        return queryset.order_by('-created_at')
 
         # user = self.request.user
         # queryset = self.model.objects

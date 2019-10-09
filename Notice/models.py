@@ -39,6 +39,3 @@ class Image(SoftDeleteModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     image = models.ImageField(blank=True, upload_to='images/%Y/%m/%d/')
     notice = models.ForeignKey(Notice, on_delete=models.CASCADE)
-
-    def dd(self):
-        print('asdsada')

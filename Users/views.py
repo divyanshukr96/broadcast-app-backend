@@ -1,7 +1,10 @@
 from django.shortcuts import render
 
 # Create your views here.
+from rest_framework.decorators import api_view
 from rest_framework.exceptions import NotFound
+from rest_framework.response import Response
+from Users.serializers import PROGRAM_CHOICE
 
 
 def error404(request):
@@ -14,3 +17,8 @@ def homeview(request):
 
 def coming(request):
     return render(request, "coming_soon.html")
+
+
+@api_view(['GET'])
+def program(request):
+    return Response(PROGRAM_CHOICE, status=200)

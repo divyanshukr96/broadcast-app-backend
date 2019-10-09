@@ -8,21 +8,22 @@ from django.db import models
 from django.utils import timezone
 from django.core.mail import send_mail
 from django.contrib.auth.base_user import AbstractBaseUser
-from django.contrib.auth.validators import UnicodeUsernameValidator
 from django.contrib.auth.models import PermissionsMixin
 from django.utils.translation import gettext_lazy as _
 
 # from Notice.models import Notice
 from Files.models import Files
 from Users.manager import UserManager
+from Users.validators import UsernameValidator, MobileValidator
 from softdelete.models import SoftDeleteModel
 
-SEX_CHOICE = [('MALE', 'MALE'), ('FEMALE', 'FEMALE'), ('OTHER', 'OTHER')]
+GENDER_CHOICE = [('MALE', 'MALE'), ('FEMALE', 'FEMALE'), ('OTHER', 'OTHER')]
 
 DEPARTMENT = 'DEPARTMENT'
 SOCIETY = 'SOCIETY'
 FACULTY = 'FACULTY'
 STUDENT = 'STUDENT'
+CHANNEL = 'CHANNEL'
 # ADMIN = 'ADMIN'
 
 USER_TYPES = [
@@ -30,12 +31,14 @@ USER_TYPES = [
     (SOCIETY, 'Society'),
     (FACULTY, 'Faculty'),
     (STUDENT, 'Student'),
+    (CHANNEL, 'Channel'),
     # (ADMIN, 'Admin'),
 ]
 
 
 class AbstractUser(AbstractBaseUser, PermissionsMixin):
-    username_validator = UnicodeUsernameValidator()
+    username_validator = UsernameValidator()
+    mobile_validator = MobileValidator()
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
 
@@ -43,7 +46,7 @@ class AbstractUser(AbstractBaseUser, PermissionsMixin):
         _('username'),
         max_length=150,
         unique=True,
-        help_text=_('Required. 150 characters or fewer. Letters, digits and @/./+/-/_ only.'),
+        help_text=_('Required. 150 characters or fewer. Letters, digits and underscore only.'),
         validators=[username_validator],
         error_messages={
             'unique': _("A user with that username already exists."),
@@ -51,8 +54,13 @@ class AbstractUser(AbstractBaseUser, PermissionsMixin):
     )
 
     name = models.CharField(_('full name'), max_length=150, blank=True)
-    email = models.EmailField(_('email address'), blank=True)
-    mobile = models.CharField(_('mobile'), max_length=15, blank=True)
+    email = models.EmailField(_('email address'), unique=True, blank=True)
+    mobile = models.CharField(
+        _('mobile'), max_length=15, unique=True, blank=True, null=True, validators=[mobile_validator],
+        error_messages={
+            'unique': _("A user with that mobile already exists."),
+        },
+    )
 
     about = models.TextField(_('about'), blank=True)
     profile = models.ImageField(_('profile image'), blank=True, upload_to='profile/%Y/%m/', null=True)
@@ -145,7 +153,8 @@ class User(AbstractUser):
     Username and password are required. Other fields are optional.
     """
 
-    # follow = models.ManyToManyField('self')
+    followers = models.ManyToManyField('self', through='Follower', symmetrical=False, related_name='following_to')
+
     # bookmark = models.ManyToManyField(Notice, db_table='bookmark', related_name='notices')
     # interested = models.ManyToManyField(Notice, db_table='interested', related_name='interested')
 
@@ -155,16 +164,40 @@ class User(AbstractUser):
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
 
+    def get_following(self):
+        return self.followers.filter(
+            to_user__status=True,
+            to_user__from_user=self)
+
+    def add_follower(self, to, status):
+        if not status:
+            return self.__remove_follower(to=to)
+        follow, created = Follower.objects.get_or_create(
+            from_user=self,
+            to_user=to,
+        )
+        if not created:
+            follow.status = True
+            follow.save()
+        return follow
+
+    def __remove_follower(self, to):
+        Follower.objects.filter(
+            from_user=self,
+            to_user=to,
+            status=True
+        ).update(status=False)
+
 
 class Student(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='student_user',
                                 limit_choices_to={'user_type': STUDENT}, primary_key=True)
     department = models.ForeignKey(User, on_delete=models.CASCADE, related_name='student_department',
                                    limit_choices_to={'user_type': DEPARTMENT, 'is_admin': False})
-    registration_number = models.CharField(max_length=20, blank=False)
+    registration_number = models.CharField(max_length=8, blank=False)
     batch = models.IntegerField(blank=False, null=True)
     program = models.CharField(max_length=80, blank=False)
-    sex = models.CharField(max_length=10, choices=SEX_CHOICE, blank=False)
+    gender = models.CharField(max_length=10, choices=GENDER_CHOICE, blank=False)
     dob = models.DateField(_('Date of Birth'), blank=True, null=True)
 
 
@@ -177,7 +210,7 @@ class Faculty(models.Model):
 
     designation = models.CharField(max_length=80, blank=False)
 
-    sex = models.CharField(_('Gender'), max_length=10, choices=SEX_CHOICE, blank=False)
+    sex = models.CharField(_('Gender'), max_length=10, choices=GENDER_CHOICE, blank=False)
 
     dob = models.DateField(_('Date of Birth'), blank=True, null=True)
 
@@ -189,4 +222,22 @@ class Society(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='society_user',
                                 limit_choices_to={'user_type': FACULTY}, primary_key=True)
     registration_number = models.CharField(max_length=20, null=True)
-    faculty_advisor = models.CharField(max_length=20, null=True)
+    faculty_adviser = models.CharField(max_length=20, null=True)
+
+
+class Follower(SoftDeleteModel):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    from_user = models.ForeignKey(User, related_name='from_user', on_delete=models.CASCADE)
+    to_user = models.ForeignKey(User, related_name='to_user', on_delete=models.CASCADE)
+    status = models.BooleanField(default=True)
+
+    @staticmethod
+    def is_following(channel, user):
+        try:
+            if channel.is_admin:
+                return True
+            if Follower.objects.filter(to_user=channel, from_user=user, status=True):
+                return True
+        except:
+            pass
+        return False

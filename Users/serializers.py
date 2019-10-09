@@ -1,9 +1,16 @@
-from abc import ABC
-
 from django.contrib.auth import authenticate
-from requests import request
+from django.utils.timezone import now
 from rest_framework import serializers
-from Users.models import User, Faculty, Student
+from Users.models import User, Faculty, Student, Follower
+
+PROGRAM_CHOICE = [
+    ('ICD', 'Integrated Certificate Diploma'),
+    ('BE', 'Bachelor of Engineering'),
+    ('MTech', 'Master of Technology'),
+    ('MBA', 'Master of Business Administration'),
+    ('MSc ', 'Master of Science'),
+    ('PhD', 'Doctor of Philosophy'),
+]
 
 
 class UserSerializers(serializers.ModelSerializer):
@@ -29,7 +36,7 @@ class FacultySerializers(serializers.ModelSerializer):
 
     class Meta:
         model = Faculty
-        fields = ('user', 'user_type', 'department', 'designation', 'sex', 'dob',)
+        fields = ('user', 'user_type', 'department', 'designation', 'gender', 'dob',)
 
 
 class StudentSerializers(serializers.ModelSerializer):
@@ -37,38 +44,56 @@ class StudentSerializers(serializers.ModelSerializer):
 
     class Meta:
         model = Student
-        fields = ('user', 'department', 'registration_number', 'batch', 'program', 'sex', 'dob')
-        # fields = ('department', 'registration_number', 'batch', 'program', 'sex', 'dob')
+        fields = ('user', 'department', 'registration_number', 'batch', 'program', 'gender', 'dob')
+        # fields = ('department', 'registration_number', 'batch', 'program', 'gender', 'dob')
 
 
 class RegisterSerializers(serializers.ModelSerializer):
     try:
-        department = serializers.ChoiceField(choices=User.objects.filter(user_type="DEPARTMENT"))
+        department = serializers.ChoiceField(choices=User.objects.filter(user_type="DEPARTMENT", is_admin=False))
     except:
         pass
-    registration_number = serializers.CharField()
-    batch = serializers.IntegerField()
-    program = serializers.CharField()
-    sex = serializers.ChoiceField(choices=['MALE', 'FEMALE', 'OTHER'])
-    dob = serializers.DateField()
+    registration_number = serializers.IntegerField()
+    batch = serializers.IntegerField(min_value=now().year - 9, max_value=now().year)
+    program = serializers.ChoiceField(choices=PROGRAM_CHOICE)
+    gender = serializers.ChoiceField(choices=['MALE', 'FEMALE', 'OTHER'])
+    dob = serializers.DateField(required=False)
 
     class Meta:
         model = User
         fields = (
-            'name', 'email', 'mobile', 'username', 'password', 'user_type',
-            'department', 'registration_number', 'batch', 'program', 'sex', 'dob',
+            'name', 'email', 'mobile', 'username', 'password',
+            'department', 'registration_number', 'batch', 'program', 'gender', 'dob',
         )
         extra_kwargs = {
             'password': {'write_only': True},
             'name': {'required': True},
             'email': {'required': True, },
             'mobile': {'required': True, },
-            'user_type': {'required': True, }
+            # 'user_type': {'required': True, }
         }
 
     def to_representation(self, instance):
         print(instance)
         return instance
+
+    def validate_registration_number(self, value):
+        program = self.initial_data.get('program')
+        batch = self.initial_data.get('batch')
+        if program == 'PhD' and len(str(value)) != 4:
+            raise serializers.ValidationError("Invalid registration number.")
+        elif len(str(value)) != 7:
+            raise serializers.ValidationError("Invalid registration number.")
+
+        if program == 'BE':
+            if str(value)[:2] != batch[2:] and (str(value)[:3] != str(int(batch[2:]) + 1) + '3'):
+                raise serializers.ValidationError("Invalid registration number.")
+            elif str(value)[:2] == batch[2:] and (str(value)[:3] != str(batch[2:]) + '4'):
+                raise serializers.ValidationError("Invalid registration number.")
+
+        elif str(value)[:2] != batch[2:]:
+            raise serializers.ValidationError("Invalid registration number.")
+        return value
 
     def create(self, validated_data):
         username = validated_data.pop('username')
@@ -77,11 +102,13 @@ class RegisterSerializers(serializers.ModelSerializer):
         user_data = {
             "name": validated_data.pop('name'),
             "mobile": validated_data.pop('mobile'),
-            'user_type': validated_data.pop('user_type')
+            'user_type': "STUDENT",
+            'is_active': False,
         }
         # print(validated_data)
         user = User.objects.create_user(username=username, email=email, password=password, **user_data)
         student = Student.objects.create(user=user, **validated_data)
+        print(user)
         return user
 
 
@@ -132,10 +159,24 @@ class LoginSerializers(serializers.Serializer):
 class PublicDepartmentSerializers(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('id', 'name')
+        fields = ('id', 'username', 'name')
 
 
 class ChannelSerializers(serializers.ModelSerializer):
+    following = serializers.SerializerMethodField('is_following')
+
     class Meta:
         model = User
-        fields = ('id', 'name', 'user_type', 'is_admin')
+        fields = ('id', 'name', 'username', 'profile', 'user_type', 'is_admin', 'following')
+
+    def is_following(self, channel):
+        user = self._context["request"].user
+        if user.is_authenticated:
+            return Follower.is_following(channel=channel, user=user)
+        return False
+
+
+class FollowerSerializers(serializers.ModelSerializer):
+    class Meta:
+        model = Follower
+        fields = ('id',)
