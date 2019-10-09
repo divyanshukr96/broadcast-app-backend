@@ -92,6 +92,9 @@ class PrivateNoticeAPI(generics.ListAPIView):
         elif user.user_type == "SOCIETY":
             queryset = self.model.objects.all()
             queryset = queryset.filter(user=user)
+        elif user.user_type == "CHANNEL":
+            queryset = self.model.objects.all()
+            queryset = queryset.filter(user=user)
         elif user.user_type == "FACULTY":
             queryset = self.model.objects.filter(public_notice=False)
             queryset = queryset.filter(department=user.faculty_user.department)

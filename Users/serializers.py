@@ -164,15 +164,22 @@ class PublicDepartmentSerializers(serializers.ModelSerializer):
 
 class ChannelSerializers(serializers.ModelSerializer):
     following = serializers.SerializerMethodField('is_following')
+    auth = serializers.SerializerMethodField('user_auth')
 
     class Meta:
         model = User
-        fields = ('id', 'name', 'username', 'profile', 'user_type', 'is_admin', 'following')
+        fields = ('id', 'name', 'username', 'profile', 'user_type', 'is_admin', 'following', 'auth')
 
     def is_following(self, channel):
         user = self._context["request"].user
         if user.is_authenticated:
             return Follower.is_following(channel=channel, user=user)
+        return False
+
+    def user_auth(self, channel):
+        user = self._context["request"].user
+        if user:
+            return user.is_authenticated
         return False
 
 
