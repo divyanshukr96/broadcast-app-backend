@@ -174,7 +174,9 @@ class ChannelSerializers(serializers.ModelSerializer):
     def is_following(self, channel):
         user = self._context["request"].user
         if user.is_authenticated:
-            if channel == user.student_user.department:
+            if user.user_type == "STUDENT" and channel == user.student_user.department:
+                return True
+            if user.user_type == "FACULTY" and channel == user.faculty_user.department:
                 return True
             return Follower.is_following(channel=channel, user=user)
         return False
@@ -182,7 +184,9 @@ class ChannelSerializers(serializers.ModelSerializer):
     def admin_or_not(self, channel):
         user = self._context["request"].user
         if user.is_authenticated:
-            if channel == user.student_user.department:
+            if user.user_type == "STUDENT" and channel == user.student_user.department:
+                return True
+            if user.user_type == "FACULTY" and channel == user.faculty_user.department:
                 return True
         return channel.is_admin
 

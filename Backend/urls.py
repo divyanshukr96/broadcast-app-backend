@@ -17,13 +17,20 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
+from fcm_django.api.rest_framework import FCMDeviceAuthorizedViewSet
+from rest_framework.routers import DefaultRouter
 
 from Users import views
 
 admin.site.site_header = 'SLIET Broadcast'
 
+router = DefaultRouter()
+
+router.register(r'devices', FCMDeviceAuthorizedViewSet)
+
 urlpatterns = [
     path('', views.coming),
+    path('', include(router.urls)),
     path('admin/', admin.site.urls),
     path('api/', include('Users.urls')),
     path('privacy-policy', views.homeview),

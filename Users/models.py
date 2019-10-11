@@ -220,7 +220,7 @@ class Faculty(models.Model):
 
 class Society(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='society_user',
-                                limit_choices_to={'user_type': FACULTY}, primary_key=True)
+                                limit_choices_to={'user_type': SOCIETY}, primary_key=True)
     registration_number = models.CharField(max_length=20, null=True)
     faculty_adviser = models.CharField(max_length=20, null=True)
 

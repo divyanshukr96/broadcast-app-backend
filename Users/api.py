@@ -1,4 +1,5 @@
 from django.db.models import QuerySet, Q
+from fcm_django.models import FCMDevice
 from rest_framework.authtoken.models import Token
 from rest_framework.response import Response
 from rest_framework.status import HTTP_200_OK
@@ -172,8 +173,10 @@ class ChannelFollowingAPI(generics.ListAPIView):
             queryset = queryset.all()
             user = self.request.user
             follow = [o.id for o in user.get_following()]
-            if user.student_user:
+            if user.user_type == "STUDENT":
                 queryset = queryset.filter(Q(id__in=follow) | Q(is_admin=True) | Q(id=user.student_user.department.id))
+            elif user.user_type == "FACULTY":
+                queryset = queryset.filter(Q(id__in=follow) | Q(is_admin=True) | Q(id=user.faculty_user.department.id))
             else:
                 queryset = queryset.filter(Q(id__in=follow) | Q(is_admin=True))
         return queryset

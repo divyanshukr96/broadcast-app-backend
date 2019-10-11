@@ -13,12 +13,11 @@ https://docs.djangoproject.com/en/2.2/ref/settings/
 import os
 import netifaces
 
-from Backend.credential import DB_NAME, DB_USER, DB_PASSWORD, SITE_SECRET_KEY, SITE_DEBUG
+from Backend.credential import DB_NAME, DB_USER, DB_PASSWORD, SITE_SECRET_KEY, SITE_DEBUG, FCM_API
 
 
 def ip_addresses():
-    ip_list = ['slietbroadcast.in', '157.245.103.153', 'www.slietbroadcast.in']
-    # ip_list = ['192.168.137.1', '*']
+    ip_list = ['slietbroadcast.in', '157.245.103.153', 'www.slietbroadcast.in', '*']
     for interface in netifaces.interfaces():
         addrs = netifaces.ifaddresses(interface)
         for x in (netifaces.AF_INET, netifaces.AF_INET6):
@@ -62,10 +61,15 @@ INSTALLED_APPS = [
     'Notice',
     'Files',
     'softdelete',
+    'fcm_django',
 ]
 
-if DEBUG:
-    INSTALLED_APPS += ['corsheaders']
+FCM_DJANGO_SETTINGS = {
+    "FCM_SERVER_KEY": FCM_API
+}
+
+# if DEBUG:
+    # INSTALLED_APPS += ['corsheaders']
 
 SITE_ID = 1
 
