@@ -155,7 +155,6 @@ class User(AbstractUser):
 
     followers = models.ManyToManyField('self', through='Follower', symmetrical=False, related_name='following_to')
 
-    # bookmark = models.ManyToManyField(Notice, db_table='bookmark', related_name='notices')
     # interested = models.ManyToManyField(Notice, db_table='interested', related_name='interested')
 
     class Meta(AbstractUser.Meta):

@@ -1,4 +1,4 @@
-from django.urls import path, re_path
+from django.urls import path, re_path, include
 from rest_framework import routers
 
 from Users import views
@@ -17,6 +17,7 @@ router.register('notice', NoticeViewSet, 'notice')
 # router.register('register', RegisterAPI, 'regot')
 
 urlpatterns = [
+    path('', include('Notice.urls')),
     path('appversion', views.app_version, name='program'),
     path('auth/register', RegisterAPI.as_view()),
     path('auth/user', UserAPI.as_view()),

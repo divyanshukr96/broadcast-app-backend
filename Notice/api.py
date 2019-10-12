@@ -1,11 +1,13 @@
-from rest_framework import viewsets, permissions, generics, status
+from django.db.models import QuerySet, Q
+from rest_framework import viewsets, permissions, generics, status, mixins
 from rest_framework.parsers import JSONParser, FormParser, MultiPartParser
 from rest_framework.response import Response
+from rest_framework.viewsets import GenericViewSet
 
 from Notice import permissions as notice_permission
-from Notice.models import Notice, Image
+from Notice.models import Notice, Image, Bookmark, NoticeView
 from Notice.paginations import NoticePagination
-from .serializers import NoticeSerializers, PublicNoticeSerializers, NoticeImageSerializers
+from .serializers import NoticeSerializers, PublicNoticeSerializers, NoticeImageSerializers, NoticeViewsSerializers
 
 
 class NoticeViewSet(viewsets.ModelViewSet):
@@ -132,3 +134,47 @@ class DeleteNoticeImage(generics.DestroyAPIView):
             return Response("Cannot delete default system category", status=status.HTTP_400_BAD_REQUEST)
         self.perform_destroy(instance)
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class BookmarkAPI(mixins.UpdateModelMixin, mixins.ListModelMixin, GenericViewSet):
+    serializer_class = PublicNoticeSerializers
+    pagination_class = NoticePagination
+
+    permission_classes = [
+        permissions.IsAuthenticated
+    ]
+
+    queryset = Notice.objects.all()
+
+    def update(self, request, *args, **kwargs):
+        try:
+            notice = Notice.objects.get(id=kwargs.get('pk'))
+        except:
+            return Response('Notice not found', 404)
+
+        if kwargs.get('pk') and notice:
+            message = "Bookmark added"
+            bookmark, created = Bookmark.objects.get_or_create(user=request.user, notice=notice)
+            if not created:
+                bookmark.delete()
+                message = "Bookmark removed"
+
+            return Response({
+                "success": message
+            }, 200)
+
+        return Response('Notice not found', 404)
+
+    def get_queryset(self):
+        bookmark = Bookmark.objects.filter(user=self.request.user).values_list('notice_id', flat=True)
+        queryset = self.queryset.filter(id__in=bookmark)
+
+        return queryset
+
+
+class NoticeViewsViewSet(mixins.CreateModelMixin, GenericViewSet):
+    serializer_class = NoticeViewsSerializers
+    queryset = NoticeView.objects.all()
+
+    def create(self, request, *args, **kwargs):
+        return super().create(request, args, kwargs)

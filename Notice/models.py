@@ -30,8 +30,6 @@ class Notice(SoftDeleteModel):
     is_event = models.BooleanField(default=False)
     visible = models.BooleanField(default=False)
 
-    # viewed = models.ManyToManyField(settings.AUTH_USER_MODEL, db_table='viewed', related_name='viewed', blank=True)
-
     def __str__(self):
         return self.title[:15]
 
@@ -40,3 +38,27 @@ class Image(SoftDeleteModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     image = models.ImageField(blank=True, upload_to='images/%Y/%m/%d/')
     notice = models.ForeignKey(Notice, on_delete=models.CASCADE)
+
+
+class NoticeHelperBase(SoftDeleteModel):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False, verbose_name='ID')
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name='User', on_delete=models.CASCADE)
+    notice = models.ForeignKey(Notice, verbose_name='Notice', on_delete=models.CASCADE)
+
+    class Meta:
+        abstract = True
+
+
+class Bookmark(NoticeHelperBase):
+    class Meta:
+        db_table = "bookmarks"
+
+
+class NoticeView(NoticeHelperBase):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name='User', on_delete=models.CASCADE, null=True)
+    device_id = models.TextField(_('device id'))
+    device_name = models.TextField(_('device name'), null=True)
+    platform = models.CharField(_('device platform'), max_length=50)
+
+    class Meta:
+        db_table = "views"
