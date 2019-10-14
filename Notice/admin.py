@@ -32,6 +32,32 @@ class DepartmentFilter(SimpleListFilter):
             return queryset.filter(user__id__exact=self.value())
 
 
+class SocietyFilter(SimpleListFilter):
+    title = 'Society Name'
+    parameter_name = 'society'
+
+    def lookups(self, request, model_admin):
+        departments = set([c for c in User.objects.filter(user_type="SOCIETY")])
+        return [(c.id, c.name) for c in departments]
+
+    def queryset(self, request, queryset):
+        if self.value():
+            return queryset.filter(user__id__exact=self.value())
+
+
+class AdministrationFilter(SimpleListFilter):
+    title = 'Name'
+    parameter_name = 'administration'
+
+    def lookups(self, request, model_admin):
+        departments = set([c for c in User.objects.filter(user_type="DEPARTMENT", is_admin=True)])
+        return [(c.id, c.name) for c in departments]
+
+    def queryset(self, request, queryset):
+        if self.value():
+            return queryset.filter(user__id__exact=self.value())
+
+
 class PostByFilter(SimpleListFilter):
     title = 'Notice Publisher'
     parameter_name = 'user'
@@ -55,4 +81,30 @@ class NoticeAdmin(admin.ModelAdmin):
     list_per_page = 50
 
 
+class SocietyNotice(Notice):
+    class Meta:
+        proxy = True
+
+
+class SocietyNoticeAdmin(admin.ModelAdmin):
+    list_filter = (SocietyFilter, 'created_at', 'public_notice', AdminFilter, PostByFilter)
+
+    def get_queryset(self, request):
+        return self.model.objects.filter(user__user_type="SOCIETY")
+
+
+class AdministrationNotice(Notice):
+    class Meta:
+        proxy = True
+
+
+class AdministrationNoticeAdmin(admin.ModelAdmin):
+    list_filter = (AdministrationFilter, 'created_at', 'public_notice', AdminFilter, PostByFilter)
+
+    def get_queryset(self, request):
+        return self.model.objects.filter(user__user_type="DEPARTMENT", user__is_admin=True)
+
+
 admin.site.register(Notice, NoticeAdmin)
+admin.site.register(SocietyNotice, SocietyNoticeAdmin)
+admin.site.register(AdministrationNotice, AdministrationNoticeAdmin)

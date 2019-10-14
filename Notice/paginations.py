@@ -20,8 +20,10 @@ class NoticePagination(PageNumberPagination):
     def paginate_queryset(self, queryset, request, view=None):
 
         if request.query_params.get('after'):
-            queryset = queryset.filter(
-                created_at__lt=request.query_params.get('after'))
+            queryset = queryset.filter(created_at__lt=request.query_params.get('after'))
+
+        if request.query_params.get('before'):
+            queryset = queryset.filter(created_at__gt=request.query_params.get('before'))
 
         # if request.query_params.get('after'):
         #     queryset = queryset.filter(

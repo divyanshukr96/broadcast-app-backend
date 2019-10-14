@@ -1,16 +1,17 @@
 from django.contrib import admin
 
 # Register your models here.
+from django.contrib.admin import SimpleListFilter
 from rest_framework.authtoken.models import Token
 from rest_framework.exceptions import ValidationError
 
 from Users.form import UserCreationForm
-from Users.models import User, Student, Faculty, Society
+from Users.models import User, Student as StudentBase, Faculty, Society, Student
 from Users.reverse_admin import ReverseModelAdmin, ReverseInlineModelAdmin
 
 
 class StudentBaseAdmin(admin.StackedInline):
-    model = Student
+    model = StudentBase
     fk_name = 'user'
     can_delete = False
 
@@ -32,17 +33,26 @@ class SocietyBaseAdmin(admin.StackedInline):
 class UserAdmin(admin.ModelAdmin):
     search_fields = ('email', 'username', 'name', 'mobile')
     list_display = ('username', 'name', 'email', 'mobile', 'is_active', 'user_type', 'created_at', 'last_login')
-    list_filter = ('user_type', 'is_admin', 'is_staff')
+    list_filter = ('user_type', 'is_admin', 'is_staff', 'is_active')
     ordering = ('-created_at',)
     fields = (
         'name', 'email', 'mobile', 'username', 'password', 'user_type', 'is_admin', 'is_staff', 'is_superuser',
-        'profile')
+        'profile', 'is_active')
     readonly_fields = ('is_superuser',)
+
+    actions = ['activate_user']
+
     list_per_page = 15
 
     form = UserCreationForm
 
     inlines = []
+
+    def activate_user(self, request, queryset):
+        queryset = queryset.filter(is_active=False)
+        queryset.update(is_active=True)
+
+    activate_user.short_description = "Activate selected user accounts"
 
     def get_inline_instances(self, request, obj=None):
         inlines = self.inlines
@@ -58,6 +68,8 @@ class UserAdmin(admin.ModelAdmin):
 
     def get_readonly_fields(self, request, obj=None):
         if obj:
+            if obj == request.user:
+                return self.readonly_fields + ('is_active',)
             if not request.user.is_superuser:
                 return self.readonly_fields + ('username', 'is_staff',)  # have to check that staff user can add or not
             return self.readonly_fields + ('username', 'user_type')
@@ -149,6 +161,46 @@ class Department(User):
         proxy = True
 
 
+class StudentUser(User):
+    class Meta:
+        proxy = True
+
+
+class DepartmentFilter(SimpleListFilter):
+    title = 'Department'
+    parameter_name = 'department'
+
+    def lookups(self, request, model_admin):
+        departments = set([c for c in User.objects.filter(user_type="DEPARTMENT", is_admin=False)])
+        print([(c.id, c.name) for c in departments])
+        return [(c.id, c.name) for c in departments]
+
+    def queryset(self, request, queryset):
+        if self.value():
+            return queryset.filter(student_user__department=self.value())
+
+
+class BatchFilter(SimpleListFilter):
+    title = 'Batch'
+    parameter_name = 'batch'
+
+    def lookups(self, request, model_admin):
+        departments = set([c for c in Student.objects.values_list('batch', flat=True).distinct()])
+        return [(c, c) for c in departments]
+
+    def queryset(self, request, queryset):
+        if self.value():
+            return queryset.filter(student_user__batch=self.value())
+
+
+class StudentAdmin(UserAdmin):
+    readonly_fields = ('is_superuser', 'is_admin', 'is_staff')
+    list_filter = (DepartmentFilter, 'is_active', 'student_user__batch')
+
+    def get_queryset(self, request):
+        return self.model.objects.filter(user_type="STUDENT", is_admin=False)
+
+
 class DepartmentAdmin(UserAdmin):
     def get_queryset(self, request):
         return self.model.objects.filter(user_type="DEPARTMENT", is_admin=False)
@@ -174,5 +226,5 @@ admin.site.register(User, UserAdmin)
 admin.site.register(Administration, AdministratorAdmin)
 admin.site.register(SuperUser)
 # admin.site.register(User, UserDetailAdmin)
-admin.site.register(Student)
+admin.site.register(StudentUser, StudentAdmin)
 admin.site.register(Department, DepartmentAdmin)

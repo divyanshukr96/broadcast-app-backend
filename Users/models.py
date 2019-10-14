@@ -66,7 +66,7 @@ class AbstractUser(AbstractBaseUser, PermissionsMixin):
     profile = models.ImageField(_('profile image'), blank=True, upload_to='profile/%Y/%m/', null=True)
     _extra_fields = models.TextField(_('extra fields'), blank=True, db_column="extra_fields")
 
-    user_type = models.CharField(_('user type'), max_length=15, choices=USER_TYPES, default='Student')
+    user_type = models.CharField(_('user type'), max_length=15, choices=USER_TYPES, default='STUDENT')
 
     is_staff = models.BooleanField(
         _('staff status'),
@@ -198,6 +198,9 @@ class Student(models.Model):
     program = models.CharField(max_length=80, blank=False)
     gender = models.CharField(max_length=10, choices=GENDER_CHOICE, blank=False)
     dob = models.DateField(_('Date of Birth'), blank=True, null=True)
+
+    def __str__(self):
+        return self.user.name
 
 
 class Faculty(models.Model):

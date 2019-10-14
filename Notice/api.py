@@ -87,7 +87,8 @@ class PrivateNoticeAPI(generics.ListAPIView):
 
         if user.user_type == "STUDENT":
             queryset = self.model.objects.filter(public_notice=True)
-            queryset = queryset.filter(department=user.student_user.department)
+            queryset = queryset.filter(
+                Q(user=user.student_user.department) | Q(user__is_admin=True) | Q(user__in=user.get_following()))
         elif user.user_type == "DEPARTMENT":
             queryset = self.model.objects.all()
             queryset = queryset.filter(user=user)
@@ -169,7 +170,7 @@ class BookmarkAPI(mixins.UpdateModelMixin, mixins.ListModelMixin, GenericViewSet
         bookmark = Bookmark.objects.filter(user=self.request.user).values_list('notice_id', flat=True)
         queryset = self.queryset.filter(id__in=bookmark)
 
-        return queryset
+        return queryset.order_by('-created_at')
 
 
 class NoticeViewsViewSet(mixins.CreateModelMixin, GenericViewSet):

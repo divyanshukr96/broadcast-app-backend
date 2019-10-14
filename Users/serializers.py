@@ -93,6 +93,8 @@ class RegisterSerializers(serializers.ModelSerializer):
 
         elif str(value)[:2] != batch[2:]:
             raise serializers.ValidationError("Invalid registration number.")
+        if Student.objects.filter(registration_number=value).exists():
+            raise serializers.ValidationError("Registration number already registered.") 
         return value
 
     def create(self, validated_data):
