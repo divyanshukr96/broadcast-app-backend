@@ -1,0 +1,16 @@
+{% load i18n %}{% autoescape off %}
+<h3>{% trans "Dear" %} {{ user.get_full_name|upper }},</h3>
+
+<div style="padding-bottom: 8px;">{% blocktrans %}Thank you for registering with SLIET Broadcast.{% endblocktrans %}</div>
+
+{% blocktrans %}<p>Your account has now been activated by the Administrator. Your account verification is now complete.</p>{% endblocktrans %}
+{% blocktrans %}<p>You can login by using your username and password by downloading our Android Application.</p>{% endblocktrans %}
+{% blocktrans %}<p>Upon logging in, you can use the service like following, bookmarking and customising the notifications along with editing your account information.</p>{% endblocktrans %}<br>
+
+<div style="padding-bottom: 16px; color: #2b669a;">{% trans "Your username is:" %} {{ user.get_username }}</div><br>
+
+
+{% trans "Thanks" %}<br>
+{% blocktrans %}SLIET Broadcast{% endblocktrans %}
+
+{% endautoescape %}

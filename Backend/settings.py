@@ -13,7 +13,8 @@ https://docs.djangoproject.com/en/2.2/ref/settings/
 import os
 import netifaces
 
-from Backend.credential import DB_NAME, DB_USER, DB_PASSWORD, SITE_SECRET_KEY, SITE_DEBUG, FCM_API
+from Backend.credential import DB_NAME, DB_USER, DB_PASSWORD, SITE_SECRET_KEY, SITE_DEBUG, FCM_API, \
+    EMAIL_HOST_CREDENTIAL, EMAIL_HOST_USER_CREDENTIAL, EMAIL_HOST_PASSWORD_CREDENTIAL
 
 
 def ip_addresses():
@@ -44,7 +45,7 @@ AUTH_USER_MODEL = 'Users.User'
 
 UUID_SECRET = 'sliet_broadcast'
 
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 # Application definition
 
 INSTALLED_APPS = [
@@ -70,6 +71,14 @@ FCM_DJANGO_SETTINGS = {
 
 # if DEBUG:
     # INSTALLED_APPS += ['corsheaders']
+
+
+EMAIL_HOST = EMAIL_HOST_CREDENTIAL
+EMAIL_USE_TLS = True
+EMAIL_PORT = 587
+EMAIL_HOST_USER = EMAIL_HOST_USER_CREDENTIAL
+EMAIL_HOST_PASSWORD = EMAIL_HOST_PASSWORD_CREDENTIAL
+
 
 SITE_ID = 1
 

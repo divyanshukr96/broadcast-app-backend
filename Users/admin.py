@@ -2,6 +2,10 @@ from django.contrib import admin
 
 # Register your models here.
 from django.contrib.admin import SimpleListFilter
+from django.core.mail import send_mail
+from django.template import Context
+from django.template.loader import get_template
+from django.utils.html import strip_tags
 from rest_framework.authtoken.models import Token
 from rest_framework.exceptions import ValidationError
 
@@ -49,8 +53,17 @@ class UserAdmin(admin.ModelAdmin):
     inlines = []
 
     def activate_user(self, request, queryset):
+        subject = 'SLIET Broadcast account verification success'
         queryset = queryset.filter(is_active=False)
-        queryset.update(is_active=True)
+        # val = queryset.update(is_active=True)
+
+        for user in queryset:
+            user.id_active = True
+            user.save()
+            message = get_template('emails/account_activated.html').render({
+                'user': user
+            })
+            user.email_user(subject, strip_tags(message), html_message=message)
 
     activate_user.short_description = "Activate selected user accounts"
 
@@ -172,7 +185,6 @@ class DepartmentFilter(SimpleListFilter):
 
     def lookups(self, request, model_admin):
         departments = set([c for c in User.objects.filter(user_type="DEPARTMENT", is_admin=False)])
-        print([(c.id, c.name) for c in departments])
         return [(c.id, c.name) for c in departments]
 
     def queryset(self, request, queryset):
