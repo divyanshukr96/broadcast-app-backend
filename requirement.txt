@@ -1,13 +1,17 @@
 certifi==2019.6.16
 chardet==3.0.4
 Django==2.2.5
+django-uuidfield==0.5.0
 djangorestframework==3.10.3
+fcm-django==0.2.21
 gunicorn==19.9.0
 idna==2.8
 netifaces==0.10.9
 Pillow==6.1.0
 psycopg2-binary==2.8.3
+pyfcm==1.4.5
 pytz==2019.2
 requests==2.22.0
+requests-toolbelt==0.9.1
 sqlparse==0.3.0
 urllib3==1.25.3
