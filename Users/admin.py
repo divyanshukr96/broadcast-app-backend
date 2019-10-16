@@ -9,6 +9,7 @@ from django.utils.html import strip_tags
 from rest_framework.authtoken.models import Token
 from rest_framework.exceptions import ValidationError
 
+from Backend import settings
 from Users.form import UserCreationForm
 from Users.models import User, Student as StudentBase, Faculty, Society, Student
 from Users.reverse_admin import ReverseModelAdmin, ReverseInlineModelAdmin
@@ -59,12 +60,12 @@ class UserAdmin(admin.ModelAdmin):
         # val = queryset.update(is_active=True)
 
         for user in queryset:
-            user.id_active = True
+            user.is_active = True
             user.save()
             message = get_template('emails/account_activated.html').render({
                 'user': user
             })
-            user.email_user(subject, strip_tags(message), from_email="broadcast@sliet.ac.in", html_message=message)
+            user.email_user(subject, strip_tags(message), from_email=settings.EMAIL_HOST_USER, html_message=message)
 
     activate_user.short_description = "Activate selected user accounts"
 
