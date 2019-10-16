@@ -5,7 +5,7 @@ from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
 from Notice import permissions as notice_permission
-from Notice.models import Notice, Image, Bookmark, NoticeView
+from Notice.models import Notice, Image, Bookmark, NoticeView, Interested
 from Notice.paginations import NoticePagination
 from .serializers import NoticeSerializers, PublicNoticeSerializers, NoticeImageSerializers, NoticeViewsSerializers
 
@@ -150,25 +150,62 @@ class BookmarkAPI(mixins.UpdateModelMixin, mixins.ListModelMixin, GenericViewSet
     def update(self, request, *args, **kwargs):
         try:
             notice = Notice.objects.get(id=kwargs.get('pk'))
+
+            if kwargs.get('pk') and notice:
+                message = "Bookmark added"
+                bookmark, created = Bookmark.objects.get_or_create(user=request.user, notice=notice)
+                if not created:
+                    bookmark.delete()
+                    message = "Bookmark removed"
+
+                return Response({
+                    "success": message
+                }, 200)
         except:
-            return Response('Notice not found', 404)
-
-        if kwargs.get('pk') and notice:
-            message = "Bookmark added"
-            bookmark, created = Bookmark.objects.get_or_create(user=request.user, notice=notice)
-            if not created:
-                bookmark.delete()
-                message = "Bookmark removed"
-
-            return Response({
-                "success": message
-            }, 200)
+            pass
 
         return Response('Notice not found', 404)
 
     def get_queryset(self):
         bookmark = Bookmark.objects.filter(user=self.request.user).values_list('notice_id', flat=True)
         queryset = self.queryset.filter(id__in=bookmark)
+
+        return queryset.order_by('-created_at')
+
+
+class InterestedAPI(mixins.UpdateModelMixin, mixins.ListModelMixin, GenericViewSet):
+    serializer_class = PublicNoticeSerializers
+
+    pagination_class = NoticePagination
+
+    permission_classes = [
+        permissions.IsAuthenticated
+    ]
+
+    queryset = Notice.objects.all()
+
+    def update(self, request, *args, **kwargs):
+        try:
+            notice = Notice.objects.get(id=kwargs.get('pk'))
+
+            if kwargs.get('pk') and notice:
+                message = "You have marked yourself for this event"
+                interested, created = Interested.objects.get_or_create(user=request.user, notice=notice)
+                if not created:
+                    interested.delete()
+                    message = "Event unmarked"
+
+                return Response({
+                    "success": message
+                }, 200)
+        except:
+            pass
+
+        return Response('Notice not found', 404)
+
+    def get_queryset(self):
+        interested = Interested.objects.filter(user=self.request.user).values_list('notice_id', flat=True)
+        queryset = self.queryset.filter(id__in=interested)
 
         return queryset.order_by('-created_at')
 

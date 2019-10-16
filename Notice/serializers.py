@@ -1,7 +1,7 @@
 from django.utils.timezone import now
 from rest_framework import serializers
 
-from Notice.models import Notice, Image, Bookmark, NoticeView
+from Notice.models import Notice, Image, Bookmark, NoticeView, Interested
 
 
 class ImageSerializers(serializers.ModelSerializer):
@@ -95,6 +95,7 @@ class PublicNoticeSerializers(serializers.ModelSerializer):
     images_list = serializers.SerializerMethodField('notice_images_list')
     profile = serializers.SerializerMethodField('user_profile')
     bookmark = serializers.SerializerMethodField('bookmark_check')
+    interested = serializers.SerializerMethodField('interested_check')
     created_at = serializers.DateTimeField(format="%d-%m-%Y, %H:%M")
     time = serializers.TimeField(format="%H:%M")
     date = serializers.TimeField(format="%d-%m-%Y")
@@ -103,7 +104,8 @@ class PublicNoticeSerializers(serializers.ModelSerializer):
         model = Notice
         fields = (
             'id', 'title', 'description', 'is_event', 'date', 'time', 'venue', 'user', 'profile', 'images',
-            'images_list', 'department', 'public_notice', 'visible', 'can_edit', 'bookmark', 'created_at', 'datetime')
+            'images_list',
+            'department', 'public_notice', 'visible', 'can_edit', 'bookmark', 'interested', 'created_at', 'datetime')
 
     def get_can_edit(self, notice):
         request = self.context.get('request')
@@ -145,6 +147,12 @@ class PublicNoticeSerializers(serializers.ModelSerializer):
         user = self.context.get('request').user
         if user.is_authenticated:
             return Bookmark.objects.filter(user=user, notice=notice).exists()
+        return False
+
+    def interested_check(self, notice):
+        user = self.context.get('request').user
+        if user.is_authenticated and notice.is_event:
+            return Interested.objects.filter(user=user, notice=notice).exists()
         return False
 
 

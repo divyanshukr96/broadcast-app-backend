@@ -53,6 +53,7 @@ class UserAdmin(admin.ModelAdmin):
     inlines = []
 
     def activate_user(self, request, queryset):
+        from django.core.mail import EmailMultiAlternatives
         subject = 'SLIET Broadcast account verification success'
         queryset = queryset.filter(is_active=False)
         # val = queryset.update(is_active=True)
@@ -63,7 +64,7 @@ class UserAdmin(admin.ModelAdmin):
             message = get_template('emails/account_activated.html').render({
                 'user': user
             })
-            user.email_user(subject, strip_tags(message), html_message=message)
+            user.email_user(subject, strip_tags(message), from_email="broadcast@sliet.ac.in", html_message=message)
 
     activate_user.short_description = "Activate selected user accounts"
 

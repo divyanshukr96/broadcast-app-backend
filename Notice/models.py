@@ -54,6 +54,11 @@ class Bookmark(NoticeHelperBase):
         db_table = "bookmarks"
 
 
+class Interested(NoticeHelperBase):
+    class Meta:
+        db_table = "interested"
+
+
 class NoticeView(NoticeHelperBase):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name='User', on_delete=models.CASCADE, null=True)
     device_id = models.TextField(_('device id'))
