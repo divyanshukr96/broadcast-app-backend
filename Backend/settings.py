@@ -45,7 +45,6 @@ AUTH_USER_MODEL = 'Users.User'
 
 UUID_SECRET = 'sliet_broadcast'
 
-# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 # Application definition
 
 INSTALLED_APPS = [
@@ -68,16 +67,16 @@ INSTALLED_APPS = [
 FCM_DJANGO_SETTINGS = {
     "FCM_SERVER_KEY": FCM_API
 }
-#
-# if DEBUG:
-#     INSTALLED_APPS += ['corsheaders']
+
+if DEBUG:
+    INSTALLED_APPS += ['corsheaders']
+    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 EMAIL_HOST = EMAIL_HOST_CREDENTIAL
 EMAIL_USE_TLS = True
 EMAIL_PORT = 587
 EMAIL_HOST_USER = EMAIL_HOST_USER_CREDENTIAL
 EMAIL_HOST_PASSWORD = EMAIL_HOST_PASSWORD_CREDENTIAL
-
 
 SITE_ID = 1
 
@@ -91,8 +90,8 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-# if DEBUG:
-#     MIDDLEWARE += ['corsheaders.middleware.CorsMiddleware']
+if DEBUG:
+    MIDDLEWARE += ['corsheaders.middleware.CorsMiddleware']
 
 ROOT_URLCONF = 'Backend.urls'
 
