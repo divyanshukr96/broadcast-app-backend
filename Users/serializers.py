@@ -1,6 +1,8 @@
 from django.contrib.auth import authenticate
 from django.utils.timezone import now
 from rest_framework import serializers
+from rest_framework.utils import json
+
 from Users.models import User, Faculty, Student, Follower
 
 PROGRAM_CHOICE = [
@@ -41,11 +43,18 @@ class FacultySerializers(serializers.ModelSerializer):
 
 class StudentSerializers(serializers.ModelSerializer):
     user = UserSerializers()
+    department = serializers.SerializerMethodField('get_department')
 
     class Meta:
         model = Student
         fields = ('user', 'department', 'registration_number', 'batch', 'program', 'gender', 'dob')
         # fields = ('department', 'registration_number', 'batch', 'program', 'gender', 'dob')
+
+    @staticmethod
+    def get_department(student):
+        if student.department:
+            return student.department.name
+        return
 
 
 class RegisterSerializers(serializers.ModelSerializer):
@@ -94,7 +103,7 @@ class RegisterSerializers(serializers.ModelSerializer):
         elif str(value)[:2] != batch[2:]:
             raise serializers.ValidationError("Invalid registration number.")
         if Student.objects.filter(registration_number=value).exists():
-            raise serializers.ValidationError("Registration number already registered.") 
+            raise serializers.ValidationError("Registration number already registered.")
         return value
 
     def create(self, validated_data):
@@ -117,12 +126,19 @@ class RegisterSerializers(serializers.ModelSerializer):
 class UserDetailSerializers(serializers.ModelSerializer):
     student = StudentSerializers(read_only=True)
     faculty = FacultySerializers(read_only=True)
+    details = serializers.SerializerMethodField('user_details')
 
     class Meta:
         model = User
         fields = (
             'id', 'name', 'email', 'mobile', 'username', 'user_type', 'is_admin', 'about', 'extra_fields', 'profile',
-            'student', 'faculty')
+            'student', 'faculty', 'details')
+
+    @staticmethod
+    def user_details(user):
+        if user.user_type == "STUDENT":
+            return StudentSerializers(user.student_user).data
+        return
 
 
 class PasswordSerializers(serializers.ModelSerializer):

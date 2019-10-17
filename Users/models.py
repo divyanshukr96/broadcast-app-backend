@@ -2,6 +2,7 @@ import uuid
 
 from django.contrib.contenttypes.fields import GenericRelation
 from django.utils.timezone import now
+from rest_framework.utils import json
 
 from Backend import settings
 from django.db import models
@@ -130,7 +131,12 @@ class AbstractUser(AbstractBaseUser, PermissionsMixin):
 
     @property
     def extra_fields(self):
-        return self._extra_fields
+        try:
+            if self._extra_fields:
+                return eval(self._extra_fields)
+        except:
+            pass
+        return {}
 
     @extra_fields.setter
     def extra_fields(self, value):

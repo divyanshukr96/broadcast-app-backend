@@ -27,6 +27,6 @@ def program(request):
 @api_view(['GET'])
 def app_version(request):
     return Response({
-        'android': '1.1.0',
+        'android': '1.2.0',
         'ios': '1.1.0'
     }, 200)
