@@ -12,3 +12,16 @@ class UserCreationForm(forms.ModelForm):
     class Meta:
         model = User
         fields = ('name', 'email', 'mobile', 'username', 'password', 'user_type')
+
+
+class FacultyForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        super(FacultyForm, self).__init__(*args, **kwargs)
+
+        try:
+            self.fields['username'].required = False
+            self.fields['email'].required = True
+            self.fields['name'].required = True
+            # self.fields['user_type'].default = "FACULTY"
+        except:
+            pass

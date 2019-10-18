@@ -1,8 +1,12 @@
+import csv
+import datetime
+
 from django.contrib import admin
 
 # Register your models here.
 from django.contrib.admin import SimpleListFilter
 from django.core.mail import send_mail
+from django.http import HttpResponse
 from django.template import Context
 from django.template.loader import get_template
 from django.utils.html import strip_tags
@@ -10,7 +14,7 @@ from rest_framework.authtoken.models import Token
 from rest_framework.exceptions import ValidationError
 
 from Backend import settings
-from Users.form import UserCreationForm
+from Users.form import UserCreationForm, FacultyForm
 from Users.models import User, Student as StudentBase, Faculty, Society, Student
 from Users.reverse_admin import ReverseModelAdmin, ReverseInlineModelAdmin
 
@@ -116,35 +120,40 @@ class StudentDetailAdmin(UserAdmin):
         return queryset
 
 
-class FacultyDetailAdmin(admin.ModelAdmin):
-    list_display = ('name', 'department_name', 'designation', 'gender')
-    fields = ('user', 'department', 'designation', 'sex', 'dob')
+class FacultyDepartmentFilter(SimpleListFilter):
+    title = 'Department'
+    parameter_name = 'department'
 
-    #
-    # fieldsets = (
-    #     (None, {
-    #         'fields': ('user', 'department',),
-    #     }),
-    # )
+    def lookups(self, request, model_admin):
+        departments = set([c for c in User.objects.filter(user_type="DEPARTMENT", is_admin=False)])
+        return [(c.id, c.name) for c in departments]
 
-    @staticmethod
-    def name(obj):
-        if obj.user:
-            return obj.user.name
+    def queryset(self, request, queryset):
+        if self.value():
+            return queryset.filter(faculty_user__department=self.value())
 
-    @staticmethod
-    def department_name(obj):
-        if obj.department:
-            return obj.department.name
 
-    @staticmethod
-    def gender(obj):
-        return obj.sex[0] + obj.sex[1:].lower()
+class FacultyDetailAdmin(UserAdmin):
+    list_filter = (FacultyDepartmentFilter, 'faculty_user__designation', 'is_admin', 'is_staff', 'is_active')
+    list_display = (
+        'username', 'name', 'designation', 'email', 'mobile', 'department', 'is_active', 'created_at', 'last_login')
+    search_fields = ('email', 'username', 'name', 'mobile', 'faculty_user__designation')
+
+    form = FacultyForm
 
     def get_queryset(self, request):
-        query = super(FacultyDetailAdmin, self).get_queryset(request)
-        filtered_query = query.filter(user__user_type='FACULTY')
-        return filtered_query
+        return self.model.objects.filter(user_type="FACULTY", is_admin=False)
+
+    @staticmethod
+    def designation(faculty):
+        return faculty.faculty_user.designation
+
+    @staticmethod
+    def department(faculty):
+        try:
+            return faculty.faculty_user.department.name
+        except:
+            return
 
     # def has_add_permission(self, request, obj=None):
     #     return False
@@ -181,6 +190,11 @@ class StudentUser(User):
         proxy = True
 
 
+class FacultyUser(User):
+    class Meta:
+        proxy = True
+
+
 class DepartmentFilter(SimpleListFilter):
     title = 'Department'
     parameter_name = 'department'
@@ -209,10 +223,48 @@ class BatchFilter(SimpleListFilter):
 
 class StudentAdmin(UserAdmin):
     readonly_fields = ('is_superuser', 'is_admin', 'is_staff')
-    list_filter = (DepartmentFilter, 'is_active', 'student_user__batch')
+    list_filter = (DepartmentFilter, 'is_active', 'student_user__program', 'student_user__batch')
+    search_fields = ('email', 'username', 'name', 'mobile', 'student_user__registration_number')
+    list_display = (
+        'username', 'name', 'email', 'mobile', 'batch', 'program', 'regd_no', 'is_active', 'created_at', 'last_login')
+
+    actions = ['activate_user', 'export_as_csv']
 
     def get_queryset(self, request):
         return self.model.objects.filter(user_type="STUDENT", is_admin=False)
+
+    def get_actions(self, request):
+        actions = super().get_actions(request)
+        if 'delete_selected' in actions:
+            del actions['delete_selected']
+        return actions
+
+    @staticmethod
+    def batch(student):
+        return student.student_user.batch
+
+    @staticmethod
+    def program(student):
+        return student.student_user.program
+
+    @staticmethod
+    def regd_no(student):
+        return student.student_user.registration_number
+
+    def export_as_csv(self, request, queryset):
+        field_names = ['Name', 'Username', 'Email', 'Mobile', 'Department', 'Batch', 'Program', 'Regd. No.']
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename={}.csv'.format(
+            'Student List ' + str(datetime.datetime.now()))
+        writer = csv.writer(response)
+        writer.writerow(field_names)
+        data = queryset.values_list('name', 'username', 'email', 'mobile', 'student_user__department__name',
+                                    'student_user__batch', 'student_user__program', 'student_user__registration_number')
+        for obj in data:
+            row = writer.writerow([value for value in obj])
+        return response
+
+    export_as_csv.short_description = "Export Selected list"
 
 
 class DepartmentAdmin(UserAdmin):
@@ -241,4 +293,5 @@ admin.site.register(Administration, AdministratorAdmin)
 admin.site.register(SuperUser)
 # admin.site.register(User, UserDetailAdmin)
 admin.site.register(StudentUser, StudentAdmin)
+admin.site.register(FacultyUser, FacultyDetailAdmin)
 admin.site.register(Department, DepartmentAdmin)

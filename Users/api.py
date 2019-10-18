@@ -2,12 +2,13 @@ from django.db.models import QuerySet, Q
 from fcm_django.models import FCMDevice
 from rest_framework.authtoken.models import Token
 from rest_framework.response import Response
-from rest_framework.status import HTTP_200_OK
+from rest_framework.status import HTTP_200_OK, HTTP_204_NO_CONTENT, HTTP_206_PARTIAL_CONTENT
 
 from Users.models import User, Faculty, Student, Follower
 from rest_framework import viewsets, permissions, generics
 
-from Users.serializers import RegisterSerializers, UserDetailSerializers, UserSerializers, ChannelSerializers
+from Users.serializers import RegisterSerializers, UserDetailSerializers, UserSerializers, ChannelSerializers, \
+    FacultyRegisterSerializers
 from Users.serializers import LoginSerializers, PasswordSerializers, FollowerSerializers
 from .serializers import FacultySerializers, StudentSerializers, DepartmentSerializers, PublicDepartmentSerializers
 
@@ -57,6 +58,25 @@ class RegisterAPI(generics.GenericAPIView):
         return Response(data_send, status=201)
 
 
+class FacultyRegisterAPI(generics.GenericAPIView):
+    serializer_class = FacultyRegisterSerializers
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.save()
+
+        user_data = UserSerializers(user, context=self.get_serializer_context()).data
+        data_send = {
+            **user_data,
+            'department': request.data['department'],
+            'designation': request.data['designation'],
+            'gender': request.data['gender'],
+            'dob': request.data['dob'],
+        }
+        return Response(data_send, status=201)
+
+
 class LoginAPI(generics.GenericAPIView):
     serializer_class = LoginSerializers
 
@@ -64,6 +84,16 @@ class LoginAPI(generics.GenericAPIView):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.validated_data
+        if not user.username:
+            return Response({
+                'email': user.email,
+                'name': user.get_full_name(),
+                'mobile': user.mobile,
+                'department': user.faculty_user.department.name,
+                'designation': user.faculty_user.designation,
+                'gender': user.faculty_user.gender,
+                'dob': user.faculty_user.dob
+            }, status=HTTP_206_PARTIAL_CONTENT)
         token, _ = Token.objects.get_or_create(user=user)
         return Response({
             **UserDetailSerializers(user, context=self.get_serializer_context()).data,

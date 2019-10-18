@@ -100,7 +100,8 @@ class PrivateNoticeAPI(generics.ListAPIView):
             queryset = queryset.filter(user=user)
         elif user.user_type == "FACULTY":
             queryset = self.model.objects.filter(public_notice=False)
-            queryset = queryset.filter(department=user.faculty_user.department)
+            queryset = queryset.filter(
+                Q(user=user.faculty_user.department) | Q(user__is_admin=True) | Q(user__in=user.get_following()))
         else:
             queryset = self.model.objects.filter(public_notice=False)
 

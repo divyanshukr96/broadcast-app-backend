@@ -47,6 +47,7 @@ class AbstractUser(AbstractBaseUser, PermissionsMixin):
         _('username'),
         max_length=150,
         unique=True,
+        null=True,
         help_text=_('Required. 150 characters or fewer. Letters, digits and underscore only.'),
         validators=[username_validator],
         error_messages={
@@ -103,6 +104,12 @@ class AbstractUser(AbstractBaseUser, PermissionsMixin):
         verbose_name = _('user')
         verbose_name_plural = _('users')
         abstract = True
+
+    def __str__(self):
+        username = self.get_username()
+        if not username and self.user_type == FACULTY:
+            return ''
+        return username
 
     def clean(self):
         super().clean()
@@ -218,7 +225,7 @@ class Faculty(models.Model):
 
     designation = models.CharField(max_length=80, blank=False)
 
-    sex = models.CharField(_('Gender'), max_length=10, choices=GENDER_CHOICE, blank=False)
+    gender = models.CharField(_('Gender'), max_length=10, choices=GENDER_CHOICE, blank=False)
 
     dob = models.DateField(_('Date of Birth'), blank=True, null=True)
 

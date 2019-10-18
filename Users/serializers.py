@@ -1,6 +1,8 @@
-from django.contrib.auth import authenticate
+from django.contrib.auth import authenticate, get_user_model
+from django.core.validators import validate_email as validate_email_address
 from django.utils.timezone import now
 from rest_framework import serializers
+from rest_framework.exceptions import ValidationError
 from rest_framework.utils import json
 
 from Users.models import User, Faculty, Student, Follower
@@ -123,6 +125,96 @@ class RegisterSerializers(serializers.ModelSerializer):
         return user
 
 
+class FacultyRegisterSerializers(serializers.ModelSerializer):
+    designation = serializers.CharField(required=True)
+    email = serializers.EmailField(required=True)
+    mobile = serializers.CharField(required=True)
+    gender = serializers.ChoiceField(choices=['MALE', 'FEMALE', 'OTHER'])
+    dob = serializers.DateField(required=False)
+
+    class Meta:
+        model = User
+
+        fields = ('name', 'email', 'mobile', 'username', 'password', 'designation', 'gender', 'dob')
+
+        extra_kwargs = {
+            'password': {'write_only': True},
+            'name': {'required': True},
+            'email': {'required': True, },
+            'mobile': {'required': True, },
+            # 'user_type': {'required': True, }
+        }
+
+    def create(self, validated_data):
+        username = validated_data.pop('username')
+        email = validated_data.pop('email')
+        password = validated_data.pop('password')
+        user_data = {
+            "name": validated_data.pop('name'),
+            "mobile": validated_data.pop('mobile'),
+            'user_type': "FACULTY",
+            'is_active': True,
+        }
+        print(validated_data)
+        user = get_user_model().objects.get(email=email)
+        user.name = user_data.get('name')
+        user.username = username
+        user.mobile = user_data.get('mobile')
+        user.faculty_user.designation = validated_data.pop('designation')
+        user.faculty_user.dob = validated_data.pop('dob')
+        user.faculty_user.gender = validated_data.pop('gender')
+        user.save()
+        user.faculty_user.save()
+        return user
+
+    @staticmethod
+    def validate_email(value):
+
+        try:
+            validate_email_address(value)
+        except:
+            raise serializers.ValidationError("Invalid email entered.")
+
+        try:
+            user = get_user_model().objects.get(email=value)
+        except:
+            raise serializers.ValidationError("This email is not registered.")
+
+        try:
+            user = get_user_model().objects.get(email=value)
+            if user.username:
+                raise
+        except:
+            raise serializers.ValidationError("This email is already registered.")
+
+        return value
+
+    def validate_mobile(self, value):
+        email = self.initial_data.get('email')
+        user = ""
+        try:
+            user = get_user_model().objects.get(mobile=value)
+        except:
+            return value
+
+        if user.email == email:
+            return value
+        raise serializers.ValidationError("A user with that mobile already exists.")
+
+    def validate_password(self, value):
+        email = self.initial_data.get('email')
+        user = ""
+        try:
+            validate_email_address(email)
+            user = get_user_model().objects.get(email=email)
+        except:
+            pass
+
+        if user and not user.check_password(value):
+            raise serializers.ValidationError("Incorrect password entered.")
+        return value
+
+
 class UserDetailSerializers(serializers.ModelSerializer):
     student = StudentSerializers(read_only=True)
     faculty = FacultySerializers(read_only=True)
@@ -166,6 +258,16 @@ class LoginSerializers(serializers.Serializer):
     password = serializers.CharField()
 
     def validate(self, attrs):
+        try:
+            validate_email_address(attrs.get('username'))
+            temp_user = get_user_model().objects.get(email=attrs.get('username'))
+            if temp_user.check_password(attrs.get('password')):
+                if temp_user.username:
+                    attrs['username'] = temp_user.username
+                elif temp_user.user_type == "FACULTY":
+                    return temp_user
+        except:
+            pass
         user = authenticate(**attrs)
         if user and user.is_active:
             return user

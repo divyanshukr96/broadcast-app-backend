@@ -2,8 +2,7 @@ from django.urls import path, re_path, include
 from rest_framework import routers
 
 from Users import views
-from .api import FacultyViewSet, StudentViewSet, DepartmentViewSet, RegisterAPI, PasswordUpdateAPI, ChannelAPI, \
-    ChannelFollowAPI, ChannelFollowingAPI
+from .api import RegisterAPI, PasswordUpdateAPI, ChannelAPI, ChannelFollowAPI, ChannelFollowingAPI, FacultyRegisterAPI
 from .api import UserAPI, LoginAPI, PublicDepartmentAPI, UserUpdateAPI
 from Notice.api import NoticeViewSet, PublicNoticeAPI, PrivateNoticeAPI, DeleteNoticeImage
 from Notice.old.api import PublicNoticeAPI as OldPublicAPI, PrivateNoticeAPI as OldPrivateAPI
@@ -20,6 +19,7 @@ urlpatterns = [
     path('', include('Notice.urls')),
     path('appversion', views.app_version, name='program'),
     path('auth/register', RegisterAPI.as_view()),
+    path('auth/register/faculty', FacultyRegisterAPI.as_view()),
     path('auth/user', UserAPI.as_view()),
     path('auth/user/password', PasswordUpdateAPI.as_view()),
     path('auth/user/update', UserUpdateAPI.as_view()),
