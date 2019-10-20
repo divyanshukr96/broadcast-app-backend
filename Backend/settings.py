@@ -62,6 +62,7 @@ INSTALLED_APPS = [
     'Files',
     'softdelete',
     'fcm_django',
+    'password_reset'
 ]
 
 FCM_DJANGO_SETTINGS = {

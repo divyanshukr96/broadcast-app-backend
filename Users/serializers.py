@@ -5,7 +5,7 @@ from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from rest_framework.utils import json
 
-from Users.models import User, Faculty, Student, Follower
+from Users.models import User, Faculty, Student, Follower, Society
 
 PROGRAM_CHOICE = [
     ('ICD', 'Integrated Certificate Diploma'),
@@ -34,13 +34,28 @@ class DepartmentSerializers(serializers.ModelSerializer):
         # exclude = ('last_login', 'is_superuser', 'is_staff', 'date_joined',)
 
 
+class SocietySerializers(serializers.ModelSerializer):
+    user = UserSerializers()
+
+    class Meta:
+        model = Society
+        fields = ('user', 'registration_number', 'faculty_adviser', 'convener')
+
+
 class FacultySerializers(serializers.ModelSerializer):
     user = UserSerializers()
-    user_type = serializers.ChoiceField(choices=['Faculty'])
+    # user_type = serializers.ChoiceField(choices=['Faculty'])
+    department = serializers.SerializerMethodField('get_department')
 
     class Meta:
         model = Faculty
-        fields = ('user', 'user_type', 'department', 'designation', 'gender', 'dob',)
+        fields = ('user', 'department', 'designation', 'gender', 'dob',)
+
+    @staticmethod
+    def get_department(student):
+        if student.department:
+            return student.department.name
+        return
 
 
 class StudentSerializers(serializers.ModelSerializer):
@@ -218,19 +233,26 @@ class FacultyRegisterSerializers(serializers.ModelSerializer):
 class UserDetailSerializers(serializers.ModelSerializer):
     student = StudentSerializers(read_only=True)
     faculty = FacultySerializers(read_only=True)
+    society = SocietySerializers(read_only=True)
     details = serializers.SerializerMethodField('user_details')
 
     class Meta:
         model = User
         fields = (
             'id', 'name', 'email', 'mobile', 'username', 'user_type', 'is_admin', 'about', 'extra_fields', 'profile',
-            'student', 'faculty', 'details')
+            'student', 'faculty', 'society', 'details')
 
     @staticmethod
     def user_details(user):
         if user.user_type == "STUDENT":
             return StudentSerializers(user.student_user).data
+        elif user.user_type == "FACULTY":
+            return FacultySerializers(user.faculty_user).data
+        elif user.user_type == "SOCIETY":
+            return SocietySerializers(user.society_user).data
         return
+
+    # def update(self, instance, validated_data):
 
 
 class PasswordSerializers(serializers.ModelSerializer):

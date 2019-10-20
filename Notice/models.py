@@ -1,21 +1,12 @@
-import os
-import sys
 import uuid
-from datetime import datetime
-from PIL import Image as PILImage
-from io import BytesIO
-
-from django.contrib.contenttypes.fields import GenericRelation
-from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
 # Create your models here.
-from django.utils import timezone
 
 from Backend import settings
-# from Users.models import Department
 from Files.models import Files
+from Notice.utils import compress_image
 from Users.models import DEPARTMENT
 from softdelete.models import SoftDeleteModel
 
@@ -46,23 +37,8 @@ class Image(SoftDeleteModel):
 
     def save(self, *args, **kwargs):
         if not self.created_at:
-            self.image = self.compress_image(self.image)
+            self.image = compress_image(self.image)
         super(Image, self).save(*args, **kwargs)
-
-    @staticmethod
-    def compress_image(image):
-        image_temp = PILImage.open(image)
-        orig_size = image.file.size
-        quality = 100
-        if orig_size > 1000000:
-            quality = int((100 * 1000000) / image.file.size)
-        output = BytesIO()
-        temp = image_temp.resize((1020, 573))
-        image_temp.save(output, format='JPEG', quality=quality)
-        output.seek(0)
-        image = InMemoryUploadedFile(output, 'ImageField', "%s.jpg" % image.name.split('.')[0],
-                                     'image/jpeg', sys.getsizeof(output), None)
-        return image
 
 
 class NoticeHelperBase(SoftDeleteModel):

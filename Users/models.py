@@ -4,16 +4,14 @@ from django.contrib.contenttypes.fields import GenericRelation
 from django.utils.timezone import now
 from rest_framework.utils import json
 
-from Backend import settings
 from django.db import models
-from django.utils import timezone
 from django.core.mail import send_mail
 from django.contrib.auth.base_user import AbstractBaseUser
 from django.contrib.auth.models import PermissionsMixin
 from django.utils.translation import gettext_lazy as _
 
-# from Notice.models import Notice
 from Files.models import Files
+from Notice.utils import compress_image
 from Users.manager import UserManager
 from Users.validators import UsernameValidator, MobileValidator
 from softdelete.models import SoftDeleteModel
@@ -149,6 +147,11 @@ class AbstractUser(AbstractBaseUser, PermissionsMixin):
     def extra_fields(self, value):
         self._extra_fields = value
 
+    def save(self, *args, **kwargs):
+        if self.profile:
+            self.profile = compress_image(self.profile)
+        super(AbstractUser, self).save(*args, **kwargs)
+
     #
     # def save(self, *args, **kwargs):
     #     print(self.clean_fields('profile'))
@@ -238,6 +241,7 @@ class Society(models.Model):
                                 limit_choices_to={'user_type': SOCIETY}, primary_key=True)
     registration_number = models.CharField(max_length=20, null=True)
     faculty_adviser = models.CharField(max_length=20, null=True)
+    convener = models.CharField(max_length=20, null=True)
 
 
 class Follower(SoftDeleteModel):
