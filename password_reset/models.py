@@ -46,6 +46,10 @@ class PasswordToken(SoftDeleteModel):
         time_diff = datetime.datetime.now() - self.created_at
         return (time_diff.seconds / 60) > 15
 
+    def being_expired(self):
+        time_diff = datetime.datetime.now() - self.created_at
+        return (time_diff.seconds / 60) > 10
+
     def send_otp_mail(self):
         subject = 'Reset your SLIET Broadcast account password'
         message = get_template('emails/password_reset.html').render({

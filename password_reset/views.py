@@ -33,7 +33,7 @@ class ObtainPasswordToken(APIView):
         serializer.is_valid(raise_exception=True)
         user = serializer.validated_data['email']
         token, created = PasswordToken.objects.get_or_create(user=user)
-        if token.expired():
+        if token.expired() or token.being_expired():
             token.delete()
             token, created = PasswordToken.objects.get_or_create(user=user)
         return Response({'token': token.key})
