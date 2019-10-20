@@ -5,6 +5,8 @@ import uuid
 
 from django.conf import settings
 from django.db import models
+from django.template.loader import get_template
+from django.utils.html import strip_tags
 from django.utils.translation import gettext_lazy as _
 
 from softdelete.models import SoftDeleteModel
@@ -22,11 +24,6 @@ class PasswordToken(SoftDeleteModel):
     otp = models.CharField(_("OTP"), max_length=8)
 
     class Meta:
-        # Work around for a bug in Django:
-        # https://code.djangoproject.com/ticket/19422
-        #
-        # Also see corresponding ticket:
-        # https://github.com/encode/django-rest-framework/issues/705
         abstract = 'password_reset' not in settings.INSTALLED_APPS
         verbose_name = _("Password Token")
         verbose_name_plural = _("Password Tokens")
@@ -35,6 +32,7 @@ class PasswordToken(SoftDeleteModel):
         if not self.key:
             self.key = self.generate_key()
             self.otp = uuid.uuid4().hex.upper()[0:6]
+            self.send_otp_mail()
         return super().save(*args, **kwargs)
 
     @staticmethod
@@ -45,5 +43,20 @@ class PasswordToken(SoftDeleteModel):
         return self.key
 
     def expired(self):
-        timediff = datetime.datetime.now() - self.created_at
-        return (timediff.seconds / 60) > 15
+        time_diff = datetime.datetime.now() - self.created_at
+        return (time_diff.seconds / 60) > 15
+
+    def send_otp_mail(self):
+        subject = 'Reset your SLIET Broadcast account password'
+        message = get_template('emails/password_reset.html').render({
+            'user': self.user,
+            'otp': self.otp
+        })
+        self.user.email_user(subject, strip_tags(message), from_email=settings.EMAIL_HOST_USER, html_message=message)
+
+    def send_success_mail(self):
+        subject = 'Password change for SLIET Broadcast successful'
+        message = get_template('emails/password_reset_success.html').render({
+            'user': self.user,
+        })
+        self.user.email_user(subject, strip_tags(message), from_email=settings.EMAIL_HOST_USER, html_message=message)

@@ -58,10 +58,8 @@ class UserAdmin(admin.ModelAdmin):
     inlines = []
 
     def activate_user(self, request, queryset):
-        from django.core.mail import EmailMultiAlternatives
         subject = 'SLIET Broadcast account verification success'
         queryset = queryset.filter(is_active=False)
-        # val = queryset.update(is_active=True)
 
         for user in queryset:
             user.is_active = True

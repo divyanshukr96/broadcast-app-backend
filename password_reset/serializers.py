@@ -108,6 +108,7 @@ class PasswordChangeSerializer(serializers.Serializer):
             user.set_password(password)
             user.save()
             try:
+
                 user.password_reset_token.first().delete()
             except:
                 pass
