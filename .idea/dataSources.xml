@@ -21,5 +21,11 @@
         <property name="enable_load_extension" value="true" />
       </driver-properties>
     </data-source>
+    <data-source source="LOCAL" name="PostgreSQL - postgres@slietbroadcast.in" uuid="74c1abe8-729a-41a3-a333-01ff5cc05f61">
+      <driver-ref>postgresql</driver-ref>
+      <synchronize>true</synchronize>
+      <jdbc-driver>org.postgresql.Driver</jdbc-driver>
+      <jdbc-url>jdbc:postgresql://slietbroadcast.in:5432/broadcast</jdbc-url>
+    </data-source>
   </component>
 </project>

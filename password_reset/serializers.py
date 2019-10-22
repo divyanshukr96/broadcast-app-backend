@@ -19,6 +19,8 @@ class PasswordTokenSerializer(serializers.Serializer):
                 raise
             except get_user_model().DoesNotExist:
                 pass
+            except:
+                raise serializers.ValidationError("This user has not been activated")
         raise serializers.ValidationError("Invalid credentials provided")
 
     def update(self, instance, validated_data):

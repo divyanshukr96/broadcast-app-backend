@@ -19,6 +19,7 @@ urlpatterns = [
     path('', include('Notice.urls')),
     path('', include('password_reset.urls')),
     path('appversion', views.app_version, name='program'),
+    path('faculty', views.faculty, name='faculty'),
     path('auth/register', RegisterAPI.as_view()),
     path('auth/register/faculty', FacultyRegisterAPI.as_view()),
     path('auth/user', UserAPI.as_view()),

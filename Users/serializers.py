@@ -170,14 +170,16 @@ class FacultyRegisterSerializers(serializers.ModelSerializer):
             'user_type': "FACULTY",
             'is_active': True,
         }
-        print(validated_data)
         user = get_user_model().objects.get(email=email)
         user.name = user_data.get('name')
         user.username = username
         user.mobile = user_data.get('mobile')
-        user.faculty_user.designation = validated_data.pop('designation')
-        user.faculty_user.dob = validated_data.pop('dob')
-        user.faculty_user.gender = validated_data.pop('gender')
+        try:
+            user.faculty_user.designation = validated_data.pop('designation')
+            user.faculty_user.dob = validated_data.pop('dob')
+            user.faculty_user.gender = validated_data.pop('gender')
+        except:
+            pass
         user.save()
         user.faculty_user.save()
         return user

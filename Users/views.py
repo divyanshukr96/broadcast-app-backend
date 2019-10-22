@@ -30,3 +30,39 @@ def app_version(request):
         'android': '1.2.0',
         'ios': '1.1.0'
     }, 200)
+
+
+@api_view(['POST'])
+def faculty(request):
+    if not request.user.is_authenticated:
+        return Response("Unauthenticated", 401)
+    import io
+    import csv
+    from Users.models import User, Faculty, FACULTY
+    from django.contrib.auth.hashers import make_password
+    csv_files = request.FILES.get('file')
+
+    if not csv_files or not csv_files.name.endswith('.csv'):
+        return Response('file error', 400)
+
+    data_set = csv_files.read().decode('UTF-8')
+
+    io_string = io.StringIO(data_set)
+    # next(data_set)
+
+    for column in csv.reader(io_string, delimiter=',', quotechar="|"):
+        try:
+            if not column[2]:
+                continue
+            fac, created = User.objects.get_or_create(
+                name=column[1],
+                email=column[2],
+                password=make_password(column[3]),
+                user_type=FACULTY
+            )
+            if created:
+                Faculty.objects.create(user=fac, department_id=column[4], designation=column[5])
+        except:
+            pass
+
+    return Response()
