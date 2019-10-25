@@ -49,11 +49,11 @@ class RegisterAPI(generics.GenericAPIView):
         data_send = {
             **user_data,
             'department': request.data['department'],
-            'registration_number': request.data['registration_number'],
-            'program': request.data['program'],
-            'batch': request.data['batch'],
-            'gender': request.data['gender'],
-            'dob': request.data['dob'],
+            'registration_number': request.data.get('registration_number'),
+            'program': request.data.get('program'),
+            'batch': request.data.get('batch'),
+            'gender': request.data.get('gender'),
+            'dob': request.data.get('dob'),
         }
         return Response(data_send, status=201)
 
@@ -86,7 +86,7 @@ class LoginAPI(generics.GenericAPIView):
         user = serializer.validated_data
         if not user.username:
             return Response({
-                'email': user.email,
+                'email': user.email.lower(),
                 'name': user.get_full_name(),
                 'mobile': user.mobile,
                 'department': user.faculty_user.department.name,

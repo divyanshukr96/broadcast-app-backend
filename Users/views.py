@@ -51,6 +51,7 @@ def faculty(request):
     # next(data_set)
 
     for column in csv.reader(io_string, delimiter=',', quotechar="|"):
+        # error = []
         try:
             if not column[2]:
                 continue
@@ -63,6 +64,7 @@ def faculty(request):
             if created:
                 Faculty.objects.create(user=fac, department_id=column[4], designation=column[5])
         except:
+            # error.append(column[2])
             pass
 
     return Response()

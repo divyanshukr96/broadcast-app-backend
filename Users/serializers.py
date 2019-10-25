@@ -79,6 +79,8 @@ class RegisterSerializers(serializers.ModelSerializer):
         department = serializers.ChoiceField(choices=User.objects.filter(user_type="DEPARTMENT", is_admin=False))
     except:
         pass
+
+    # username = serializers.CharField(required=True, )
     registration_number = serializers.IntegerField()
     batch = serializers.IntegerField(min_value=now().year - 9, max_value=now().year)
     program = serializers.ChoiceField(choices=PROGRAM_CHOICE)
@@ -96,6 +98,7 @@ class RegisterSerializers(serializers.ModelSerializer):
             'name': {'required': True},
             'email': {'required': True, },
             'mobile': {'required': True, },
+            'username': {'required': True, },
             # 'user_type': {'required': True, }
         }
 
@@ -161,8 +164,8 @@ class FacultyRegisterSerializers(serializers.ModelSerializer):
         }
 
     def create(self, validated_data):
-        username = validated_data.pop('username')
-        email = validated_data.pop('email')
+        username = validated_data.pop('username').lower()
+        email = validated_data.pop('email').lower()
         password = validated_data.pop('password')
         user_data = {
             "name": validated_data.pop('name'),
@@ -284,19 +287,21 @@ class LoginSerializers(serializers.Serializer):
     def validate(self, attrs):
         try:
             validate_email_address(attrs.get('username'))
-            temp_user = get_user_model().objects.get(email=attrs.get('username'))
+            temp_user = get_user_model().objects.get(email=attrs.get('username').lower())
             if temp_user.check_password(attrs.get('password')):
                 if temp_user.username:
                     attrs['username'] = temp_user.username
                 elif temp_user.user_type == "FACULTY":
                     return temp_user
         except:
+            attrs['username'] = attrs.get('username').lower()
             pass
         user = authenticate(**attrs)
         if user and user.is_active:
             return user
         raise serializers.ValidationError({
-            'error': "Incorrect credentials"
+            'error': "Incorrect credentials",
+            'username': "Incorrect username or password"
         }, 422)
 
 
