@@ -5,9 +5,11 @@ from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
 from Notice import permissions as notice_permission
-from Notice.models import Notice, Image, Bookmark, NoticeView, Interested
+from Notice.models import Notice, Image, Bookmark, NoticeView, Interested, TempImage
 from Notice.paginations import NoticePagination
-from .serializers import NoticeSerializers, PublicNoticeSerializers, NoticeImageSerializers, NoticeViewsSerializers
+from Users.models import User
+from .serializers import NoticeSerializers, PublicNoticeSerializers, NoticeImageSerializers, NoticeViewsSerializers, \
+    TempImageSerializers
 
 
 class NoticeViewSet(viewsets.ModelViewSet):
@@ -25,8 +27,9 @@ class NoticeViewSet(viewsets.ModelViewSet):
         temp_dept = self.request.POST.getlist('department[]')
         serializer.is_valid(raise_exception=True)
         serializer.validated_data['user'] = self.request.user
-        if temp_dept.__len__() >= 1:
-            serializer.validated_data['department'] = temp_dept
+        # if temp_dept.__len__() >= 1:
+        #     data = User.objects.filter(user_type="DEPARTMENT", is_admin=False, id__in=temp_dept)
+        #     serializer.validated_data['department'] = temp_dept
         # serializer.validated_data['department'] =
         notice = serializer.save()
         # print(notice)
@@ -34,8 +37,8 @@ class NoticeViewSet(viewsets.ModelViewSet):
     def perform_update(self, serializer):
         temp_dept = self.request.POST.getlist('department[]')
         serializer.is_valid(raise_exception=True)
-        if temp_dept.__len__() >= 1:
-            serializer.validated_data['department'] = temp_dept
+        # if temp_dept.__len__() >= 1:
+        #     serializer.validated_data['department'] = temp_dept
         serializer.save()
 
     def get_queryset(self):
@@ -216,4 +219,15 @@ class NoticeViewsViewSet(mixins.CreateModelMixin, GenericViewSet):
     queryset = NoticeView.objects.all()
 
     def create(self, request, *args, **kwargs):
+        return super().create(request, args, kwargs)
+
+
+class TempImageViewSet(mixins.CreateModelMixin, mixins.DestroyModelMixin, GenericViewSet):
+    serializer_class = TempImageSerializers
+    queryset = TempImage.objects.all()
+
+    def create(self, request, *args, **kwargs):
+        # queryset = self.queryset.filter(created_at__lt=)
+        # if queryset:
+        #     queryset.delete()
         return super().create(request, args, kwargs)

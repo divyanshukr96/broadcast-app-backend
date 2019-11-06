@@ -124,7 +124,25 @@ class RegisterSerializers(serializers.ModelSerializer):
             raise serializers.ValidationError("Invalid registration number.")
         if Student.objects.filter(registration_number=value).exists():
             raise serializers.ValidationError("Registration number already registered.")
-        return value
+        return
+
+    @staticmethod
+    def validate_password(password):
+        if len(str(password)) < 8:
+            raise serializers.ValidationError("Password must be at least 6 characters.")
+        return password
+
+    @staticmethod
+    def validate_username(username):
+        if len(str(username)) < 5:
+            raise serializers.ValidationError("Username must be at least 5 characters.")
+        return username
+
+    @staticmethod
+    def validate_name(name):
+        if len(str(name)) < 5:
+            raise serializers.ValidationError("Full name must be at least 5 characters.")
+        return name
 
     def create(self, validated_data):
         username = validated_data.pop('username')

@@ -1,5 +1,6 @@
 from django.contrib.auth import get_user_model
 from django.utils.translation import gettext_lazy as _
+from django.core.validators import validate_email as validate_email_address
 
 from rest_framework import serializers
 
@@ -11,9 +12,10 @@ class PasswordTokenSerializer(serializers.Serializer):
 
     @staticmethod
     def validate_email(email):
+        validate_email_address(email)
         if email:
             try:
-                user = get_user_model().objects.get(email=email)
+                user = get_user_model().objects.get(email=email.lower())
                 if user.is_active and user.username:
                     return user
                 raise

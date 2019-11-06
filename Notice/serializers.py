@@ -1,7 +1,9 @@
+from datetime import datetime
+
 from django.utils.timezone import now
 from rest_framework import serializers
 
-from Notice.models import Notice, Image, Bookmark, NoticeView, Interested
+from Notice.models import Notice, Image, Bookmark, NoticeView, Interested, TempImage
 
 
 class ImageSerializers(serializers.ModelSerializer):
@@ -21,8 +23,26 @@ class NoticeSerializers(serializers.ModelSerializer):
             'id', 'title', 'description', 'date', 'time', 'venue', 'public_notice', 'department', 'images_list',
             'images', 'is_event', 'visible')
 
+    def __init__(self, *args, **kwargs):
+        context = kwargs.get('context', None)
+        if context:
+            request = kwargs['context']['request']
+            if request.method in ["POST"]:
+                request.POST._mutable = True
+                temp_dept = request.POST.getlist('department[]')
+                if temp_dept.__len__() >= 1 and not request.POST.getlist('department'):
+                    request.POST.setlist('department', temp_dept)
+                    request.data.setlist('department', temp_dept)
+                request.POST._mutable = False
+        super().__init__(*args, **kwargs)
+
     def notice_images(self, notice):
         request = self.context.get('request')
+        try:
+            if not notice.created_at:
+                return
+        except:
+            return
         data = notice.image_set.all()
         if data:
             return list(map(lambda d: {
@@ -30,6 +50,58 @@ class NoticeSerializers(serializers.ModelSerializer):
                 'url': request.build_absolute_uri(d.image.url)
             }, data))
         return
+
+    def validate_department(self, department):
+        # print(department)
+        # print(self.context.get('view').request.POST)
+        if not department:
+            raise serializers.ValidationError("Target Department field is required.")
+        return department
+
+    @staticmethod
+    def validate_title(title):
+        if title and len(title) < 4:
+            raise serializers.ValidationError("Notice title should be more than 5 characters")
+        return title
+
+    def validate_description(self, description):
+        if not self.context.get('view').request.FILES and not description:
+            raise serializers.ValidationError("Notice description / image is required")
+        if description and len(description) < 10:
+            raise serializers.ValidationError("Notice description should be more than 10 characters")
+        return description
+
+    def validate_venue(self, venue):
+        is_event = self.initial_data.get('is_event')
+        if is_event and not venue:
+            raise serializers.ValidationError("Event venue field is required.")
+        return venue
+
+    # def validate_time(self, time):
+    #     date = self.initial_data.get('date')
+    #     if time and not date:
+    #         raise serializers.ValidationError("Event date field is required.")
+    #     return time
+
+    def validate_date(self, date):
+        time = self.initial_data.get('time')
+        if time and not date:
+            raise serializers.ValidationError("Event date field is required.")
+        event_date_time = (str(date) + ' ' + time + ':00') if time else date
+        time_format = "%Y-%m-%d %H:%M:%S" if time else "%m/%d/%Y %H:%M:%S"
+        event_date_time = datetime.strptime(event_date_time, time_format)
+        if datetime.now() >= event_date_time:
+            raise serializers.ValidationError("Event date and time is invalid.")
+
+        return date
+
+    def validate_visible(self, visible):
+        public_notice = self.initial_data.get('public_notice')
+
+        if public_notice not in ['1', 'true', True, 1]:
+            return False
+
+        return visible
 
     def create(self, validated_data):
         departments = ""
@@ -89,7 +161,8 @@ class NoticeSerializers(serializers.ModelSerializer):
 
 class PublicNoticeSerializers(serializers.ModelSerializer):
     can_edit = serializers.SerializerMethodField()
-    user = serializers.SerializerMethodField('is_named_bar')
+    user = serializers.SerializerMethodField('notice_user')
+    username = serializers.SerializerMethodField('notice_username')
     images = serializers.SerializerMethodField('notice_images')
     datetime = serializers.SerializerMethodField('notice_created')
     images_list = serializers.SerializerMethodField('notice_images_list')
@@ -103,7 +176,7 @@ class PublicNoticeSerializers(serializers.ModelSerializer):
     class Meta:
         model = Notice
         fields = (
-            'id', 'title', 'description', 'is_event', 'date', 'time', 'venue', 'user', 'profile', 'images',
+            'id', 'title', 'description', 'is_event', 'date', 'time', 'venue', 'user', 'username', 'profile', 'images',
             'images_list',
             'department', 'public_notice', 'visible', 'can_edit', 'bookmark', 'interested', 'created_at', 'datetime')
 
@@ -114,8 +187,12 @@ class PublicNoticeSerializers(serializers.ModelSerializer):
         return False
 
     @staticmethod
-    def is_named_bar(notice):
+    def notice_user(notice):
         return notice.user.name
+
+    @staticmethod
+    def notice_username(notice):
+        return notice.user.username
 
     @staticmethod
     def notice_created(notice):
@@ -164,6 +241,15 @@ class NoticeImageSerializers(serializers.ModelSerializer):
 class NoticeViewsSerializers(serializers.ModelSerializer):
     class Meta:
         model = NoticeView
+        fields = "__all__"
+
+    def create(self, validated_data):
+        return super().create(validated_data)
+
+
+class TempImageSerializers(serializers.ModelSerializer):
+    class Meta:
+        model = TempImage
         fields = "__all__"
 
     def create(self, validated_data):
