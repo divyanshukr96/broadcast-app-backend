@@ -5,11 +5,10 @@ from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
 from Notice import permissions as notice_permission
-from Notice.models import Notice, Image, Bookmark, NoticeView, Interested, TempImage
+from Notice.models import Notice, Image, Bookmark, NoticeView, Interested
 from Notice.paginations import NoticePagination
 from Users.models import User
-from .serializers import NoticeSerializers, PublicNoticeSerializers, NoticeImageSerializers, NoticeViewsSerializers, \
-    TempImageSerializers
+from .serializers import NoticeSerializers, PublicNoticeSerializers, NoticeImageSerializers, NoticeViewsSerializers
 
 
 class NoticeViewSet(viewsets.ModelViewSet):
@@ -219,15 +218,4 @@ class NoticeViewsViewSet(mixins.CreateModelMixin, GenericViewSet):
     queryset = NoticeView.objects.all()
 
     def create(self, request, *args, **kwargs):
-        return super().create(request, args, kwargs)
-
-
-class TempImageViewSet(mixins.CreateModelMixin, mixins.DestroyModelMixin, GenericViewSet):
-    serializer_class = TempImageSerializers
-    queryset = TempImage.objects.all()
-
-    def create(self, request, *args, **kwargs):
-        # queryset = self.queryset.filter(created_at__lt=)
-        # if queryset:
-        #     queryset.delete()
         return super().create(request, args, kwargs)

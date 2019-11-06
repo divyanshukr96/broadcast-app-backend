@@ -41,17 +41,6 @@ class Image(SoftDeleteModel):
         super(Image, self).save(*args, **kwargs)
 
 
-class TempImage(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    image = models.ImageField(blank=True, upload_to='temp/%Y/%m/%d/')
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    def save(self, *args, **kwargs):
-        if not self.created_at:
-            self.image = compress_image(self.image)
-        super(TempImage, self).save(*args, **kwargs)
-
-
 class NoticeHelperBase(SoftDeleteModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False, verbose_name='ID')
     user = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name='User', on_delete=models.CASCADE)

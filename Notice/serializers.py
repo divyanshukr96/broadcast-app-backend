@@ -3,7 +3,7 @@ from datetime import datetime
 from django.utils.timezone import now
 from rest_framework import serializers
 
-from Notice.models import Notice, Image, Bookmark, NoticeView, Interested, TempImage
+from Notice.models import Notice, Image, Bookmark, NoticeView, Interested
 
 
 class ImageSerializers(serializers.ModelSerializer):
@@ -241,15 +241,6 @@ class NoticeImageSerializers(serializers.ModelSerializer):
 class NoticeViewsSerializers(serializers.ModelSerializer):
     class Meta:
         model = NoticeView
-        fields = "__all__"
-
-    def create(self, validated_data):
-        return super().create(validated_data)
-
-
-class TempImageSerializers(serializers.ModelSerializer):
-    class Meta:
-        model = TempImage
         fields = "__all__"
 
     def create(self, validated_data):
