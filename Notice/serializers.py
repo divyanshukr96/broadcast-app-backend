@@ -65,10 +65,17 @@ class NoticeSerializers(serializers.ModelSerializer):
         return title
 
     def validate_description(self, description):
-        if not self.context.get('view').request.FILES and not description:
+        method = self.context.get('view').request.method
+        files = self.context.get('view').request.FILES
+
+        if not files and not description and method == "POST":
             raise serializers.ValidationError("Notice description / image is required")
+        elif method == "PATCH" and not files and len(self.instance.image_set.all()) == 0 and not description:
+            raise serializers.ValidationError("Notice description / image is required .....")
+
         if description and len(description) < 10:
             raise serializers.ValidationError("Notice description should be more than 10 characters")
+
         return description
 
     def validate_venue(self, venue):
@@ -85,10 +92,11 @@ class NoticeSerializers(serializers.ModelSerializer):
 
     def validate_date(self, date):
         time = self.initial_data.get('time')
-        if time and not date:
+
+        if (time and not date) or not date:
             raise serializers.ValidationError("Event date field is required.")
-        event_date_time = (str(date) + ' ' + time + ':00') if time else date
-        time_format = "%Y-%m-%d %H:%M:%S" if time else "%m/%d/%Y %H:%M:%S"
+        event_date_time = (str(date) + ' ' + time + ':00') if time else str(date)
+        time_format = "%Y-%m-%d %H:%M:%S" if time else "%Y-%m-%d"
         event_date_time = datetime.strptime(event_date_time, time_format)
         if datetime.now() >= event_date_time:
             raise serializers.ValidationError("Event date and time is invalid.")

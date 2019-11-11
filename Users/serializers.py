@@ -124,7 +124,7 @@ class RegisterSerializers(serializers.ModelSerializer):
             raise serializers.ValidationError("Invalid registration number.")
         if Student.objects.filter(registration_number=value).exists():
             raise serializers.ValidationError("Registration number already registered.")
-        return
+        return value
 
     @staticmethod
     def validate_password(password):
@@ -178,7 +178,7 @@ class FacultyRegisterSerializers(serializers.ModelSerializer):
             'name': {'required': True},
             'email': {'required': True, },
             'mobile': {'required': True, },
-            # 'user_type': {'required': True, }
+            'username': {'required': True, }
         }
 
     def create(self, validated_data):
@@ -272,7 +272,10 @@ class UserDetailSerializers(serializers.ModelSerializer):
         elif user.user_type == "FACULTY":
             return FacultySerializers(user.faculty_user).data
         elif user.user_type == "SOCIETY":
-            return SocietySerializers(user.society_user).data
+            try:
+                return SocietySerializers(user.society_user).data
+            except:
+                pass
         return
 
     # def update(self, instance, validated_data):
