@@ -2,7 +2,8 @@ from django.urls import path, re_path, include
 from rest_framework import routers
 
 from Users import views
-from .api import RegisterAPI, PasswordUpdateAPI, ChannelAPI, ChannelFollowAPI, ChannelFollowingAPI, FacultyRegisterAPI
+from .api import RegisterAPI, PasswordUpdateAPI, ChannelAPI, ChannelFollowAPI, ChannelFollowingAPI, FacultyRegisterAPI, \
+    UserDetailWithNotice
 from .api import UserAPI, LoginAPI, PublicDepartmentAPI, UserUpdateAPI
 from Notice.api import NoticeViewSet, PublicNoticeAPI, PrivateNoticeAPI, DeleteNoticeImage
 from Notice.old.api import PublicNoticeAPI as OldPublicAPI, PrivateNoticeAPI as OldPrivateAPI
@@ -36,6 +37,7 @@ urlpatterns = [
     path('channel/following', ChannelFollowingAPI.as_view()),
     re_path('channel/follow/(?P<pk>[^/.]+)', ChannelFollowAPI.as_view({'post': 'create', 'delete': 'destroy'})),
     re_path('notice/(?P<pk_notice>[^/.]+)/image/(?P<pk>[^/.]+)', DeleteNoticeImage.as_view()),
+    re_path('user/(?P<pk>[^/.]+)', UserDetailWithNotice.as_view({'get': 'retrieve'})),
 ]
 
 urlpatterns += router.urls

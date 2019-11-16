@@ -5,6 +5,7 @@ from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from rest_framework.utils import json
 
+from Notice.serializers import PublicNoticeSerializers
 from Users.models import User, Faculty, Student, Follower, Society
 
 PROGRAM_CHOICE = [
@@ -371,3 +372,39 @@ class FollowerSerializers(serializers.ModelSerializer):
     class Meta:
         model = Follower
         fields = ('id',)
+
+
+class UserDetailWithNoticeSerializers(serializers.ModelSerializer):
+    following = serializers.SerializerMethodField('is_following')
+    auth = serializers.SerializerMethodField('user_auth')
+    is_admin = serializers.SerializerMethodField('admin_or_not')
+    notices = serializers.SerializerMethodField('notices_list')
+
+    class Meta:
+        model = User
+        fields = ('id', 'name', 'username', 'profile', 'user_type', 'is_admin', 'following', 'auth', 'notices')
+
+    def is_following(self, channel):
+        user = self._context["request"].user
+        if user.is_authenticated:
+            if user.user_type == "STUDENT" and channel == user.student_user.department:
+                return True
+            if user.user_type == "FACULTY" and channel == user.faculty_user.department:
+                return True
+            return Follower.is_following(channel=channel, user=user)
+        return False
+
+    @staticmethod
+    def admin_or_not(channel):
+        return channel.is_admin
+
+    def user_auth(self, channel):
+        user = self._context["request"].user
+        if user:
+            return user.is_authenticated
+        return False
+
+    def notices_list(self, user):
+        # if user:
+        #     return user.is_authenticated
+        return PublicNoticeSerializers(user.notice_user.all(), many=True, context=self.context).data

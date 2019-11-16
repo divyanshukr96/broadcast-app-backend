@@ -8,7 +8,7 @@ from Users.models import User, Faculty, Student, Follower
 from rest_framework import viewsets, permissions, generics
 
 from Users.serializers import RegisterSerializers, UserDetailSerializers, UserSerializers, ChannelSerializers, \
-    FacultyRegisterSerializers
+    FacultyRegisterSerializers, UserDetailWithNoticeSerializers
 from Users.serializers import LoginSerializers, PasswordSerializers, FollowerSerializers
 from .serializers import FacultySerializers, StudentSerializers, DepartmentSerializers, PublicDepartmentSerializers
 
@@ -255,3 +255,13 @@ class ChannelFollowAPI(viewsets.ModelViewSet):
     #         if params.get('type'):
     #             queryset = queryset.filter(user_type=params.get('type').upper())
     #     return queryset
+
+
+class UserDetailWithNotice(viewsets.ModelViewSet):
+    serializer_class = UserDetailWithNoticeSerializers
+
+    queryset = User.objects.all()
+
+    def get_queryset(self):
+        queryset = self.queryset.filter(user_type__in=['CHANNEL', 'DEPARTMENT', 'SOCIETY'])
+        return queryset

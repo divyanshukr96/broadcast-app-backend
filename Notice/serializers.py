@@ -184,8 +184,8 @@ class PublicNoticeSerializers(serializers.ModelSerializer):
     class Meta:
         model = Notice
         fields = (
-            'id', 'title', 'description', 'is_event', 'date', 'time', 'venue', 'user', 'username', 'profile', 'images',
-            'images_list',
+            'id', 'title', 'description', 'is_event', 'date', 'time', 'venue', 'user', 'user_id', 'username', 'profile',
+            'images', 'images_list',
             'department', 'public_notice', 'visible', 'can_edit', 'bookmark', 'interested', 'created_at', 'datetime')
 
     def get_can_edit(self, notice):
