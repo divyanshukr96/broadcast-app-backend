@@ -80,7 +80,7 @@ class NoticeSerializers(serializers.ModelSerializer):
 
     def validate_venue(self, venue):
         is_event = self.initial_data.get('is_event')
-        if is_event and not venue:
+        if is_event in ['true', 1, '1', True] and not venue:
             raise serializers.ValidationError("Event venue field is required.")
         return venue
 
