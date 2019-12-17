@@ -146,7 +146,7 @@ class RegisterSerializers(serializers.ModelSerializer):
         return name
 
     def create(self, validated_data):
-        username = validated_data.pop('username')
+        username = validated_data.pop('username').lower()
         email = validated_data.pop('email')
         password = validated_data.pop('password')
         user_data = {
@@ -158,7 +158,6 @@ class RegisterSerializers(serializers.ModelSerializer):
         # print(validated_data)
         user = User.objects.create_user(username=username, email=email, password=password, **user_data)
         student = Student.objects.create(user=user, **validated_data)
-        print(user)
         return user
 
 
@@ -404,7 +403,14 @@ class UserDetailWithNoticeSerializers(serializers.ModelSerializer):
             return user.is_authenticated
         return False
 
-    def notices_list(self, user):
-        # if user:
-        #     return user.is_authenticated
-        return PublicNoticeSerializers(user.notice_user.all(), many=True, context=self.context).data
+    def notices_list(self, notice_user):
+        queryset = notice_user.notice_user.all()
+        user = self.context["request"].user
+
+        if user and user.is_authenticated:
+            if user.user_type == "STUDENT":
+                queryset = queryset.filter(public_notice=True)
+        else:
+            queryset = queryset.filter(public_notice=True)
+
+        return PublicNoticeSerializers(queryset.order_by('-created_at'), many=True, context=self.context).data

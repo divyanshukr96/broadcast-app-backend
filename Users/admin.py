@@ -245,8 +245,7 @@ class StudentAdmin(UserAdmin):
     def program(student):
         return student.student_user.program
 
-    @staticmethod
-    def regd_no(student):
+    def regd_no(self, student):
         return student.student_user.registration_number
 
     def export_as_csv(self, request, queryset):
@@ -263,6 +262,8 @@ class StudentAdmin(UserAdmin):
         return response
 
     export_as_csv.short_description = "Export Selected list"
+
+    regd_no.admin_order_field = 'student_user__registration_number'
 
 
 class DepartmentAdmin(UserAdmin):
